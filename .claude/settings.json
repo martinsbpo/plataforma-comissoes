@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint *)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run test)",
+      "Bash(npm run test *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; npm run build *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; npm run lint *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; npm run dev *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; npm run typecheck *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; npm install *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; npx shadcn@latest add *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; Get-Content *)",
+      "PowerShell(cd \"C:\\Projetos\\plataforma-comissoes\"; New-Item *)",
+      "PowerShell(New-Item -ItemType Directory *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(git *)"
+    ],
+    "deny": []
+  }
+}
