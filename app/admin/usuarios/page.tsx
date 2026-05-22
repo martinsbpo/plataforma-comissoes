@@ -62,8 +62,8 @@ export default async function UsuariosPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {(vinculos ?? []).map((v) => {
-                const user = v.users as { email: string; nome: string | null } | null
-                const tenant = v.tenants as { nome: string; nome_fantasia: string | null } | null
+                const user = (Array.isArray(v.users) ? v.users[0] : v.users) as { email: string; nome: string | null } | null
+                const tenant = (Array.isArray(v.tenants) ? v.tenants[0] : v.tenants) as { nome: string; nome_fantasia: string | null } | null
                 return (
                   <tr key={v.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
