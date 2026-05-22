@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-Content \"C:\\\\Users\\\\Cliente\\\\.claude\\\\projects\\\\c--Projetos-plataforma-comissoes-supabase-migrations\\\\9f516e10-6384-46e6-a17c-4e6dc250083b.jsonl\")",
+      "Bash(Select-Object -First 100)",
+      "Bash(head -c 10000 \"C:\\\\Users\\\\Cliente\\\\.claude\\\\projects\\\\c--Projetos-plataforma-comissoes-supabase-migrations\\\\9f516e10-6384-46e6-a17c-4e6dc250083b.jsonl\")",
+      "Read(//c/Users/Cliente/.claude/projects/c--Projetos-plataforma-comissoes-supabase-migrations/**)",
+      "Bash(ls \"C:\\\\Users\\\\Cliente\\\\.claude\\\\projects\\\\\")",
+      "Read(//c/Users/Cliente/.claude/**)"
+    ]
+  }
+}
