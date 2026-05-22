@@ -51,7 +51,7 @@ export async function getSession(): Promise<UserSession | null> {
     nome: profile?.nome ?? null,
     role: link.role as UserRole,
     tenantId: link.tenant_id,
-    tenantNome: (link.tenants as { nome: string } | null)?.nome ?? '',
+    tenantNome: (Array.isArray(link.tenants) ? (link.tenants[0] as { nome: string } | undefined)?.nome : (link.tenants as { nome: string } | null)?.nome) ?? '',
   }
 }
 
