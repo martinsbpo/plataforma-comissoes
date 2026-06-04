@@ -18,13 +18,16 @@ type Props = {
 export function AppLayout({ session, nav, tenantColor, logoUrl, breadcrumb, children }: Props) {
   const [collapsed, setCollapsed] = useState(false)
 
+  const color = tenantColor ?? session.tenantColor
+  const logo = logoUrl ?? session.tenantLogoUrl
+
   return (
     <div className="flex h-screen bg-[#F8F9FA] overflow-hidden">
       <Sidebar
         nav={nav}
         tenantNome={session.tenantNome}
-        tenantColor={tenantColor}
-        logoUrl={logoUrl}
+        tenantColor={color}
+        logoUrl={logo}
         collapsed={collapsed}
         onToggle={() => setCollapsed(c => !c)}
       />

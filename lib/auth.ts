@@ -16,6 +16,8 @@ export type UserSession = {
   role: UserRole
   tenantId: string
   tenantNome: string
+  tenantColor?: string | null
+  tenantLogoUrl?: string | null
 }
 
 // Retorna a sessão completa do usuário (perfil + tenant ativo)
@@ -30,7 +32,7 @@ export async function getSession(): Promise<UserSession | null> {
 
   const { data: link } = await admin
     .from('user_tenant_links')
-    .select('role, tenant_id, tenants(nome)')
+    .select('role, tenant_id, tenants(nome, primary_color, logo_url)')
     .eq('user_id', user.id)
     .eq('status', 'ativo')
     .order('created_at', { ascending: true })
@@ -45,13 +47,19 @@ export async function getSession(): Promise<UserSession | null> {
     .eq('id', user.id)
     .single()
 
+  const tenant = (Array.isArray(link.tenants) ? link.tenants[0] : link.tenants) as {
+    nome: string; primary_color?: string | null; logo_url?: string | null
+  } | null
+
   return {
     id: user.id,
     email: user.email!,
     nome: profile?.nome ?? null,
     role: link.role as UserRole,
     tenantId: link.tenant_id,
-    tenantNome: (Array.isArray(link.tenants) ? (link.tenants[0] as { nome: string } | undefined)?.nome : (link.tenants as { nome: string } | null)?.nome) ?? '',
+    tenantNome: tenant?.nome ?? '',
+    tenantColor: tenant?.primary_color ?? null,
+    tenantLogoUrl: tenant?.logo_url ?? null,
   }
 }
 

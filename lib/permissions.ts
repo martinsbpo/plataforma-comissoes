@@ -38,13 +38,17 @@ const PERMISSIONS: Record<Permission, UserRole[]> = {
 // Rotas protegidas → perfis mínimos permitidos
 export const ROUTE_PERMISSIONS: Record<string, UserRole[]> = {
   '/dashboard':               ['bpo_admin', 'bpo_operador', 'bpo_visualizador', 'corretora_gestor', 'corretora_operador', 'parceiro'],
-  '/parceiros':               ['bpo_admin', 'bpo_operador', 'corretora_gestor', 'corretora_operador'],
+  '/parceiros':               ['bpo_admin', 'bpo_operador', 'bpo_visualizador', 'corretora_gestor', 'corretora_operador'],
   '/producao':                ['bpo_admin', 'bpo_operador', 'corretora_gestor', 'corretora_operador'],
   '/financeiro':              ['bpo_admin', 'bpo_operador', 'bpo_visualizador', 'corretora_gestor', 'parceiro'],
   '/relatorios':              ['bpo_admin', 'bpo_operador', 'bpo_visualizador', 'corretora_gestor'],
   '/fechamento':              ['bpo_admin', 'bpo_operador'],
   '/seguradoras':             ['bpo_admin', 'bpo_operador'],
   '/banco':                   ['bpo_admin', 'bpo_operador'],
+  '/admin/corretoras':        ['bpo_admin'],
+  '/admin/seguradoras':       ['bpo_admin'],
+  '/admin/produtos':          ['bpo_admin'],
+  '/admin/aliquotas':         ['bpo_admin', 'bpo_operador'],
   '/admin/usuarios':          ['bpo_admin', 'corretora_gestor'],
   '/admin/configuracoes':     ['bpo_admin'],
   '/admin/layouts':           ['bpo_admin'],

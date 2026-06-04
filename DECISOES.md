@@ -50,7 +50,13 @@
 | E1.S2 — Autenticação SSO Microsoft | ✅ Concluído | Login com @martinsbpo.com.br funcionando |
 | E1.S3 — Multi-tenant estrutura de dados | ✅ Concluído | Migration aplicada, tabelas criadas, seed inserido |
 | E1.S4 — Perfis e Permissões | ✅ Concluído | Middleware, matriz de permissões, seletor de corretora, tela de usuários |
-| E2–E4 | ⏳ Em andamento | Stories aprovadas, aguardando implementação |
+| E1.S5 — Layout Base da Interface | ✅ Concluído | Sidebar, header, dashboard, componentes reutilizáveis, tema de cores, deploy em produção |
+| E2.S1 — Cadastro de Corretoras | ✅ Concluído | Listagem, cadastro, edição, upload de logo, white-label, dados bancários, migration 003 |
+| E2.S2 — Cadastro de Seguradoras | ✅ Concluído | Listagem, cadastro, edição, regras de retenção por regime, migration 004 |
+| E2.S4 — Grupos, Produtos e De-Para | ✅ Concluído | Abas Grupos/Produtos/De-Para em /admin/produtos, seed de partida, migration 005 |
+| E2.S5 — Cadastro de Parceiros | ✅ Concluído | Listagem, cadastro, edição, dados bancários, percentuais sugeridos, migration 006 |
+| E2.S6 — Alíquotas Mensais | ✅ Concluído | Registro por corretora/competência, preview de cálculo, histórico, migration 007 |
+| E2.S3, E3–E4 | ⏳ Em andamento | Stories aprovadas, aguardando implementação |
 
 > Status sugeridos: ⏳ Em andamento · ✅ Concluído · ⚠️ Pendente revisão
 
@@ -81,3 +87,6 @@
 | 2026-05-22 | Setup do projeto, deploy Vercel, SSO Microsoft | — |
 | 2026-05-22 | Migration multi-tenant aplicada no Supabase | `supabase/migrations/001_multi_tenant_base.sql` |
 | 2026-05-22 | E1.S4 — Perfis e permissões implementados | `middleware.ts`, `lib/permissions.ts`, `lib/auth.ts`, `supabase/migrations/002_permissions.sql` |
+| 2026-05-22 | E1.S5 — Layout base implementado e deployado | `components/layout/`, `lib/nav.ts`, `components/ui/data-table.tsx` |
+| 2026-06-04 | E2.S1 — Cadastro de Corretoras implementado | `app/admin/corretoras/`, `supabase/migrations/003_corretoras.sql` |
+| 2026-06-04 | E2.S2 — Cadastro de Seguradoras implementado | `app/admin/seguradoras/`, `supabase/migrations/004_seguradoras.sql` |
