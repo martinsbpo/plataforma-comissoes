@@ -73,6 +73,7 @@ export async function atualizarParceiro(id: string, data: ParceiroFormData) {
   const { error } = await db
     .from('parceiros')
     .update({
+      tenant_id: data.tenant_id,
       nome: data.nome,
       cpf: data.cpf,
       email: data.email,
