@@ -59,7 +59,6 @@ export function SeguradoraForm({ id, initial, retencoesIniciais, grupos = [] }: 
   const [nomeFant, setNomeFant] = useState(initial?.nome_fantasia ?? '')
   const [cnpj, setCnpj] = useState(initial?.cnpj ?? '')
   const [cnpjErro, setCnpjErro] = useState('')
-  const [susep, setSusep] = useState(initial?.codigo_susep ?? '')
   const [ramosSelecionados, setRamosSelecionados] = useState<string[]>(initial?.ramos ?? [])
   const [politicaNf, setPoliticaNf] = useState(initial?.politica_nf ?? '')
   const [formatoEstorno, setFormatoEstorno] = useState(initial?.formato_estorno ?? '')
@@ -97,10 +96,9 @@ export function SeguradoraForm({ id, initial, retencoesIniciais, grupos = [] }: 
 
     startTransition(async () => {
       const payload: SeguradoraFormData = {
-        nome,
-        nome_fantasia: nomeFant,
+        nome: nome.toUpperCase(),
+        nome_fantasia: nomeFant.toUpperCase(),
         cnpj,
-        codigo_susep: susep,
         ramos: ramosSelecionados,
         politica_nf: politicaNf as SeguradoraFormData['politica_nf'],
         formato_estorno: formatoEstorno as SeguradoraFormData['formato_estorno'],
@@ -146,11 +144,11 @@ export function SeguradoraForm({ id, initial, retencoesIniciais, grupos = [] }: 
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className={labelCls}>Razão Social *</label>
-            <input required value={nome} onChange={e => setNome(e.target.value)} className={inputCls} />
+            <input required value={nome} onChange={e => setNome(e.target.value.toUpperCase())} className={inputCls} />
           </div>
           <div className="col-span-2">
             <label className={labelCls}>Nome Fantasia *</label>
-            <input required value={nomeFant} onChange={e => setNomeFant(e.target.value)} className={inputCls} />
+            <input required value={nomeFant} onChange={e => setNomeFant(e.target.value.toUpperCase())} className={inputCls} />
           </div>
           <div>
             <label className={labelCls}>CNPJ *</label>
@@ -162,10 +160,6 @@ export function SeguradoraForm({ id, initial, retencoesIniciais, grupos = [] }: 
               className={`${inputCls} ${cnpjErro ? 'border-red-400' : ''}`}
             />
             {cnpjErro && <p className="text-xs text-red-500 mt-1">{cnpjErro}</p>}
-          </div>
-          <div>
-            <label className={labelCls}>Código SUSEP *</label>
-            <input required value={susep} onChange={e => setSusep(e.target.value)} className={inputCls} />
           </div>
           <div className="col-span-2">
             <label className={labelCls}>

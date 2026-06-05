@@ -21,7 +21,6 @@ export type SeguradoraFormData = {
   nome: string
   nome_fantasia: string
   cnpj: string
-  codigo_susep: string
   ramos: string[]
   politica_nf: 'exige_antes_pagamento' | 'emite_no_fechamento' | 'nao_emite'
   formato_estorno: 'incluso_relatorio' | 'lancamento_manual'
@@ -38,7 +37,6 @@ export async function criarSeguradora(data: SeguradoraFormData) {
       nome: data.nome,
       nome_fantasia: data.nome_fantasia,
       cnpj: data.cnpj,
-      codigo_susep: data.codigo_susep,
       ramos: data.ramos,
       politica_nf: data.politica_nf,
       formato_estorno: data.formato_estorno,
@@ -77,7 +75,6 @@ export async function atualizarSeguradora(id: string, data: SeguradoraFormData) 
       nome: data.nome,
       nome_fantasia: data.nome_fantasia,
       cnpj: data.cnpj,
-      codigo_susep: data.codigo_susep,
       ramos: data.ramos,
       politica_nf: data.politica_nf,
       formato_estorno: data.formato_estorno,
