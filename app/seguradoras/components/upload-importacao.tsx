@@ -25,6 +25,7 @@ type AvisoCompetencia = {
 type Props = {
   seguradoras: Seguradora[]
   layouts: Layout[]
+  tenantId: string
 }
 
 const MESES = [
@@ -44,7 +45,7 @@ function competenciaOpcoes() {
   return opcoes
 }
 
-export function UploadImportacao({ seguradoras, layouts }: Props) {
+export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
   const [pending, startTransition] = useTransition()
@@ -82,6 +83,7 @@ export function UploadImportacao({ seguradoras, layouts }: Props) {
     fd.append('layout_id', layoutId)
     fd.append('seguradora_id', seguradoraId)
     fd.append('competencia', competencia)
+    fd.append('tenant_id', tenantId)
     if (diaPagamento) fd.append('dia_pagamento', diaPagamento)
     if (forceCompetencia) fd.append('force', 'true')
 

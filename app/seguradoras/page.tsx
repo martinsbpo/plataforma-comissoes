@@ -25,7 +25,7 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 export default async function SeguradorasImportacaoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ aba?: string; seguradora?: string; status?: string; mes?: string }>
+  searchParams: Promise<{ aba?: string; seguradora?: string; status?: string; mes?: string; corretora?: string }>
 }) {
   const session = await getSession()
   if (!session) redirect('/')
@@ -36,14 +36,24 @@ export default async function SeguradorasImportacaoPage({
   const params = await searchParams
   const aba = params.aba ?? 'historico'
   const canUpload = ['bpo_admin', 'bpo_operador'].includes(session.role)
+  const isBpo = ['bpo_admin', 'bpo_operador', 'bpo_visualizador'].includes(session.role)
 
   const db = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
 
+  // Corretoras para seletor (BPO Admin)
+  let corretoras: { id: string; nome: string; nome_fantasia: string | null }[] = []
+  if (isBpo) {
+    const { data } = await db.from('tenants').select('id, nome, nome_fantasia').eq('status', 'ativo').order('nome')
+    corretoras = data ?? []
+  }
+
+  const corretoraId = isBpo ? (params.corretora ?? session.tenantId) : session.tenantId
+
   const [{ data: seguradoras }, { data: layouts }, historico] = await Promise.all([
-    db.from('seguradoras').select('id, nome_fantasia, nome').eq('status', 'ativo').order('nome_fantasia'),
+    db.from('seguradoras').select('id, nome_fantasia, nome').eq('tenant_id', corretoraId).eq('status', 'ativo').order('nome_fantasia'),
     db.from('seguradora_layouts').select('id, nome, formato, seguradora_id').eq('status', 'ativo').order('nome'),
     (() => {
       let q = db
@@ -54,7 +64,7 @@ export default async function SeguradorasImportacaoPage({
           created_at,
           seguradora:seguradora_id (nome_fantasia, nome)
         `)
-        .eq('tenant_id', session.tenantId)
+        .eq('tenant_id', corretoraId)
         .order('competencia', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(50)
@@ -88,12 +98,34 @@ export default async function SeguradorasImportacaoPage({
           </p>
         </div>
 
+        {/* Seletor de corretora (BPO) */}
+        {isBpo && corretoras.length > 0 && (
+          <form method="GET" className="flex items-end gap-3">
+            <input type="hidden" name="aba" value={aba} />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-gray-600">Corretora</label>
+              <select
+                name="corretora"
+                defaultValue={corretoraId}
+                className="px-3 py-2 text-sm border-2 border-[#5B7291] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B7291]/30 min-w-[220px]"
+              >
+                {corretoras.map(c => (
+                  <option key={c.id} value={c.id}>{c.nome_fantasia ?? c.nome}</option>
+                ))}
+              </select>
+            </div>
+            <button type="submit" className="px-4 py-2 text-sm bg-[#5B7291] text-white rounded-lg hover:bg-[#4a6080] transition-colors">
+              Selecionar
+            </button>
+          </form>
+        )}
+
         {/* Abas */}
         <div className="flex gap-1 border-b border-gray-200">
           {abas.map((a) => (
             <Link
               key={a.value}
-              href={`/seguradoras?aba=${a.value}`}
+              href={`/seguradoras?aba=${a.value}&corretora=${corretoraId}`}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 aba === a.value
                   ? 'text-[#5B7291] border-b-2 border-[#5B7291] -mb-px'
@@ -110,6 +142,7 @@ export default async function SeguradorasImportacaoPage({
           <UploadImportacao
             seguradoras={seguradoras ?? []}
             layouts={layouts ?? []}
+            tenantId={corretoraId}
           />
         )}
 
@@ -118,6 +151,7 @@ export default async function SeguradorasImportacaoPage({
             {/* Filtros */}
             <form method="GET" className="flex flex-wrap gap-3">
               <input type="hidden" name="aba" value="historico" />
+              <input type="hidden" name="corretora" value={corretoraId} />
               <select
                 name="seguradora"
                 defaultValue={params.seguradora ?? ''}

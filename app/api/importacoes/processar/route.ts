@@ -25,6 +25,11 @@ export async function POST(req: NextRequest) {
   const competencia = formData.get('competencia') as string | null  // YYYY-MM-DD
   const diaPagamento = formData.get('dia_pagamento') as string | null
   const force = formData.get('force') === 'true'
+  const tenantIdParam = formData.get('tenant_id') as string | null
+
+  // BPO pode importar para qualquer corretora; corretora só importa para si mesma
+  const isBpo = ['bpo_admin', 'bpo_operador'].includes(session.role)
+  const tenantId = (isBpo && tenantIdParam) ? tenantIdParam : session.tenantId
 
   if (!arquivo || !layoutId || !seguradoraId || !competencia) {
     return NextResponse.json({ error: 'Campos obrigatórios: arquivo, layout_id, seguradora_id, competencia' }, { status: 400 })
@@ -54,7 +59,7 @@ export async function POST(req: NextRequest) {
   const { data: existente } = await db
     .from('importacoes')
     .select('id, status')
-    .eq('tenant_id', session.tenantId)
+    .eq('tenant_id', tenantId)
     .eq('seguradora_id', seguradoraId)
     .eq('hash_arquivo', hashArquivo)
     .single()
@@ -106,7 +111,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Fazer upload para Storage
-  const storagePath = `${session.tenantId}/${seguradoraId}/${competencia}/${Date.now()}_${arquivo.name}`
+  const storagePath = `${tenantId}/${seguradoraId}/${competencia}/${Date.now()}_${arquivo.name}`
   const { error: uploadError } = await db.storage
     .from('importacoes')
     .upload(storagePath, buffer, { contentType: arquivo.type || 'application/octet-stream' })
@@ -129,7 +134,7 @@ export async function POST(req: NextRequest) {
   const { data: importacao, error: impErr } = await db
     .from('importacoes')
     .insert({
-      tenant_id: session.tenantId,
+      tenant_id: tenantId,
       seguradora_id: seguradoraId,
       layout_id: layoutId,
       competencia,
