@@ -295,7 +295,7 @@ function Totais({ total_comissao, total_imposto, total_repasses, total_resultado
   )
 }
 
-function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_nome?: string | null; seguradora_id?: string; referencia: string; segurado: string; produto: string | null; comissao_recebida: number; imposto_valor: number; indicador_nome: string | null; repasse_indicador: number; corretor1_nome: string | null; repasse_corretor1: number; corretor2_nome: string | null; repasse_corretor2: number; resultado: number }[]; readonly?: boolean }) {
+function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_nome?: string | null; seguradora_id?: string; referencia: string; segurado: string; produto: string | null; comissao_recebida: number; imposto_valor: number; indicador_nome: string | null; pct_indicador?: number | null; repasse_indicador: number; corretor1_nome: string | null; pct_corretor1?: number | null; repasse_corretor1: number; corretor2_nome: string | null; pct_corretor2?: number | null; repasse_corretor2: number; resultado: number }[]; readonly?: boolean }) {
   return (
     <div className={`bg-white rounded-xl border overflow-x-auto ${readonly ? 'border-gray-200' : 'border-gray-200'}`}>
       <table className="w-full text-xs whitespace-nowrap">
@@ -308,10 +308,13 @@ function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_n
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Comissão</th>
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Imposto</th>
             <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Indicador</th>
+            <th className="text-right px-3 py-2.5 text-gray-600 font-medium">%</th>
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Rep. Ind.</th>
             <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Corretor 1</th>
+            <th className="text-right px-3 py-2.5 text-gray-600 font-medium">%</th>
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Rep. Cor1</th>
             <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Corretor 2</th>
+            <th className="text-right px-3 py-2.5 text-gray-600 font-medium">%</th>
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Rep. Cor2</th>
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Resultado</th>
           </tr>
@@ -326,10 +329,13 @@ function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_n
               <td className="px-3 py-2 text-right font-medium text-gray-900">{fmt(l.comissao_recebida)}</td>
               <td className="px-3 py-2 text-right text-gray-500">{fmt(l.imposto_valor)}</td>
               <td className="px-3 py-2 text-gray-600">{l.indicador_nome ?? '—'}</td>
+              <td className="px-3 py-2 text-right text-gray-400">{l.indicador_nome && 'pct_indicador' in l && l.pct_indicador != null ? `${l.pct_indicador}%` : '—'}</td>
               <td className="px-3 py-2 text-right text-gray-700">{l.indicador_nome ? fmt(l.repasse_indicador) : '—'}</td>
               <td className="px-3 py-2 text-gray-600">{l.corretor1_nome ?? '—'}</td>
+              <td className="px-3 py-2 text-right text-gray-400">{l.corretor1_nome && 'pct_corretor1' in l && l.pct_corretor1 != null ? `${l.pct_corretor1}%` : '—'}</td>
               <td className="px-3 py-2 text-right text-gray-700">{l.corretor1_nome ? fmt(l.repasse_corretor1) : '—'}</td>
               <td className="px-3 py-2 text-gray-600">{l.corretor2_nome ?? '—'}</td>
+              <td className="px-3 py-2 text-right text-gray-400">{l.corretor2_nome && 'pct_corretor2' in l && l.pct_corretor2 != null ? `${l.pct_corretor2}%` : '—'}</td>
               <td className="px-3 py-2 text-right text-gray-700">{l.corretor2_nome ? fmt(l.repasse_corretor2) : '—'}</td>
               <td className={`px-3 py-2 text-right font-semibold ${l.resultado >= 0 ? 'text-green-700' : 'text-red-600'}`}>
                 {fmt(l.resultado)}

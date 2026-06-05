@@ -122,9 +122,9 @@ export default async function FinanceiroPage({
         .select(`
           seguradora_id, referencia, segurado, produto,
           comissao_recebida, imposto_valor,
-          indicador_nome, repasse_indicador,
-          corretor1_nome, repasse_corretor1,
-          corretor2_nome, repasse_corretor2,
+          indicador_nome, pct_indicador, repasse_indicador,
+          corretor1_nome, pct_corretor1, repasse_corretor1,
+          corretor2_nome, pct_corretor2, repasse_corretor2,
           resultado,
           seguradora:seguradora_id(nome_fantasia, nome)
         `)
@@ -153,10 +153,13 @@ export default async function FinanceiroPage({
             comissao_recebida: l.comissao_recebida,
             imposto_valor: l.imposto_valor,
             indicador_nome: l.indicador_nome,
+            pct_indicador: l.pct_indicador,
             repasse_indicador: l.repasse_indicador,
             corretor1_nome: l.corretor1_nome,
+            pct_corretor1: l.pct_corretor1,
             repasse_corretor1: l.repasse_corretor1,
             corretor2_nome: l.corretor2_nome,
+            pct_corretor2: l.pct_corretor2,
             repasse_corretor2: l.repasse_corretor2,
             resultado: l.resultado,
           }
