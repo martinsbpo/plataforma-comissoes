@@ -52,6 +52,7 @@ const ALL_NAV: NavGroup[] = [
       { label: 'Seguradoras', href: '/admin/seguradoras', icon: '🛡️' },
       { label: 'Produtos & De-Para', href: '/admin/produtos', icon: '📦' },
       { label: 'Alíquotas Mensais', href: '/admin/aliquotas', icon: '📅' },
+      { label: 'Layouts de Importação', href: '/admin/layouts', icon: '🗂️' },
       { label: 'Usuários', href: '/admin/usuarios', icon: '👥' },
       { label: 'Configurações', href: '/admin/configuracoes', icon: '⚙️' },
     ],
@@ -70,6 +71,7 @@ const ROUTE_ROLES: Record<string, UserRole[]> = {
   '/admin/corretoras':  ['bpo_admin'],
   '/admin/seguradoras': ['bpo_admin'],
   '/admin/usuarios':    ['bpo_admin', 'corretora_gestor'],
+  '/admin/layouts':      ['bpo_admin'],
   '/admin/configuracoes':['bpo_admin'],
 }
 

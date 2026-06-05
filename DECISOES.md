@@ -56,7 +56,10 @@
 | E2.S4 — Grupos, Produtos e De-Para | ✅ Concluído | Abas Grupos/Produtos/De-Para em /admin/produtos, seed de partida, migration 005 |
 | E2.S5 — Cadastro de Parceiros | ✅ Concluído | Listagem, cadastro, edição, dados bancários, percentuais sugeridos, migration 006 |
 | E2.S6 — Alíquotas Mensais | ✅ Concluído | Registro por corretora/competência, preview de cálculo, histórico, migration 007 |
-| E2.S3, E3–E4 | ⏳ Em andamento | Stories aprovadas, aguardando implementação |
+| E2.S3 — Layouts de Importação | ✅ Concluído | Migration 008, /admin/layouts, form com mapeamento de colunas |
+| E3 — Engine de Importação | ✅ Concluído | Parser TXT/CSV/XLSX/PDF, Route Handler /api/importacoes/processar, de-para automático |
+| E3 — Tela de Importação | ✅ Concluído | /seguradoras (upload + histórico), /seguradoras/[id] (detalhe + resolução + confirmação) |
+| E4 | ⏳ Em andamento | Stories aprovadas, aguardando implementação |
 
 > Status sugeridos: ⏳ Em andamento · ✅ Concluído · ⚠️ Pendente revisão
 
