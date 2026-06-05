@@ -107,11 +107,13 @@ alter table public.importacoes enable row level security;
 alter table public.importacao_linhas enable row level security;
 
 -- Layouts: todos autenticados lêem; bpo_admin gerencia
+drop policy if exists "layouts: leitura autenticados" on public.seguradora_layouts;
 create policy "layouts: leitura autenticados" on public.seguradora_layouts
   for select using (
     exists (select 1 from public.user_tenant_links where user_id = auth.uid() and status = 'ativo')
   );
 
+drop policy if exists "layouts: bpo_admin gerencia" on public.seguradora_layouts;
 create policy "layouts: bpo_admin gerencia" on public.seguradora_layouts
   for all using (
     exists (
@@ -120,11 +122,13 @@ create policy "layouts: bpo_admin gerencia" on public.seguradora_layouts
     )
   );
 
+drop policy if exists "layout_mapeamentos: leitura autenticados" on public.layout_mapeamentos;
 create policy "layout_mapeamentos: leitura autenticados" on public.layout_mapeamentos
   for select using (
     exists (select 1 from public.user_tenant_links where user_id = auth.uid() and status = 'ativo')
   );
 
+drop policy if exists "layout_mapeamentos: bpo_admin gerencia" on public.layout_mapeamentos;
 create policy "layout_mapeamentos: bpo_admin gerencia" on public.layout_mapeamentos
   for all using (
     exists (
@@ -134,6 +138,7 @@ create policy "layout_mapeamentos: bpo_admin gerencia" on public.layout_mapeamen
   );
 
 -- Importações: bpo vê todas; corretora vê as suas
+drop policy if exists "importacoes: bpo le todas" on public.importacoes;
 create policy "importacoes: bpo le todas" on public.importacoes
   for select using (
     exists (
@@ -143,6 +148,7 @@ create policy "importacoes: bpo le todas" on public.importacoes
     )
   );
 
+drop policy if exists "importacoes: bpo gerencia" on public.importacoes;
 create policy "importacoes: bpo gerencia" on public.importacoes
   for all using (
     exists (
@@ -152,6 +158,7 @@ create policy "importacoes: bpo gerencia" on public.importacoes
     )
   );
 
+drop policy if exists "importacao_linhas: bpo le todas" on public.importacao_linhas;
 create policy "importacao_linhas: bpo le todas" on public.importacao_linhas
   for select using (
     exists (
@@ -161,6 +168,7 @@ create policy "importacao_linhas: bpo le todas" on public.importacao_linhas
     )
   );
 
+drop policy if exists "importacao_linhas: bpo gerencia" on public.importacao_linhas;
 create policy "importacao_linhas: bpo gerencia" on public.importacao_linhas
   for all using (
     exists (
@@ -175,6 +183,7 @@ insert into storage.buckets (id, name, public)
 values ('importacoes', 'importacoes', false)
 on conflict (id) do nothing;
 
+drop policy if exists "importacoes storage: bpo acessa" on storage.objects;
 create policy "importacoes storage: bpo acessa" on storage.objects
   for all using (
     bucket_id = 'importacoes'
