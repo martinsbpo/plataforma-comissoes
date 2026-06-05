@@ -28,6 +28,13 @@ type ProducaoRow = {
   observacoes: string | null
 }
 
+type PreFill = {
+  seguradora_id?: string
+  referencia?: string
+  segurado?: string
+  comissao?: number
+}
+
 type Props = {
   seguradoras: Seguradora[]
   grupos: GrupoProduto[]
@@ -35,13 +42,14 @@ type Props = {
   parceiros: Parceiro[]
   tenantId: string
   editRow?: ProducaoRow
+  preFill?: PreFill
   onClose: () => void
   onSaved: (msg: string) => void
 }
 
 export function ProducaoForm({
   seguradoras, grupos, produtos, parceiros: parceirosIniciais,
-  tenantId, editRow, onClose, onSaved,
+  tenantId, editRow, preFill, onClose, onSaved,
 }: Props) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
@@ -54,13 +62,13 @@ export function ProducaoForm({
   const today = new Date().toISOString().slice(0, 10)
 
   const [data, setData] = useState(editRow?.data ?? today)
-  const [seguradoraId, setSeguradoraId] = useState(editRow?.seguradora_id ?? '')
-  const [segurado, setSegurado] = useState(editRow?.segurado ?? '')
-  const [referencia, setReferencia] = useState(editRow?.referencia ?? '')
+  const [seguradoraId, setSeguradoraId] = useState(editRow?.seguradora_id ?? preFill?.seguradora_id ?? '')
+  const [segurado, setSegurado] = useState(editRow?.segurado ?? preFill?.segurado ?? '')
+  const [referencia, setReferencia] = useState(editRow?.referencia ?? preFill?.referencia ?? '')
   const [cpf, setCpf] = useState(editRow?.cpf_segurado ?? '')
   const [grupoId, setGrupoId] = useState(editRow?.grupo_produto_id ?? '')
   const [produtoId, setProdutoId] = useState(editRow?.produto_id ?? '')
-  const [comissao, setComissao] = useState(editRow?.comissao != null ? String(editRow.comissao) : '')
+  const [comissao, setComissao] = useState(editRow?.comissao != null ? String(editRow.comissao) : preFill?.comissao != null ? String(preFill.comissao) : '')
   const [indicadorId, setIndicadorId] = useState(editRow?.indicador_id ?? '')
   const [pctIndicador, setPctIndicador] = useState(editRow?.pct_indicador != null ? String(editRow.pct_indicador) : '')
   const [corretor1Id, setCorretor1Id] = useState(editRow?.corretor1_id ?? '')
