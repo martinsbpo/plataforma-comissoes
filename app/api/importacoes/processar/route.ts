@@ -24,6 +24,7 @@ export async function POST(req: NextRequest) {
   const seguradoraId = formData.get('seguradora_id') as string | null
   const competencia = formData.get('competencia') as string | null  // YYYY-MM-DD
   const diaPagamento = formData.get('dia_pagamento') as string | null
+  const force = formData.get('force') === 'true'
 
   if (!arquivo || !layoutId || !seguradoraId || !competencia) {
     return NextResponse.json({ error: 'Campos obrigatórios: arquivo, layout_id, seguradora_id, competencia' }, { status: 400 })
@@ -65,17 +66,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Fazer upload para Storage
-  const storagePath = `${session.tenantId}/${seguradoraId}/${competencia}/${Date.now()}_${arquivo.name}`
-  const { error: uploadError } = await db.storage
-    .from('importacoes')
-    .upload(storagePath, buffer, { contentType: arquivo.type || 'application/octet-stream' })
-
-  if (uploadError) {
-    return NextResponse.json({ error: `Erro no upload: ${uploadError.message}` }, { status: 500 })
-  }
-
-  // Processar arquivo
+  // Processar arquivo antes do upload para detectar divergências
   let linhasParseadas: Awaited<ReturnType<typeof parseArquivo>>
   try {
     linhasParseadas = await parseArquivo(buffer, {
@@ -89,8 +80,39 @@ export async function POST(req: NextRequest) {
       mapeamentos: layout.mapeamentos,
     })
   } catch (parseErr: unknown) {
-    await db.storage.from('importacoes').remove([storagePath])
     return NextResponse.json({ error: `Erro ao processar arquivo: ${String(parseErr)}` }, { status: 422 })
+  }
+
+  // Verificar divergência de competência
+  const mesDeclarado = competencia.slice(0, 7) // YYYY-MM
+  const linhasDivergentes = linhasParseadas.filter(
+    (l) => l.data_competencia && !l.data_competencia.startsWith(mesDeclarado)
+  )
+
+  if (linhasDivergentes.length > 0 && !force) {
+    // Coletar competências distintas encontradas no arquivo
+    const competenciasNoArquivo = [...new Set(
+      linhasDivergentes
+        .map((l) => l.data_competencia?.slice(0, 7))
+        .filter(Boolean)
+    )]
+    return NextResponse.json({
+      aviso_competencia: true,
+      total_divergentes: linhasDivergentes.length,
+      total_linhas: linhasParseadas.length,
+      competencia_declarada: mesDeclarado,
+      competencias_no_arquivo: competenciasNoArquivo,
+    }, { status: 200 })
+  }
+
+  // Fazer upload para Storage
+  const storagePath = `${session.tenantId}/${seguradoraId}/${competencia}/${Date.now()}_${arquivo.name}`
+  const { error: uploadError } = await db.storage
+    .from('importacoes')
+    .upload(storagePath, buffer, { contentType: arquivo.type || 'application/octet-stream' })
+
+  if (uploadError) {
+    return NextResponse.json({ error: `Erro no upload: ${uploadError.message}` }, { status: 500 })
   }
 
   // Buscar de-para de produtos para esta seguradora

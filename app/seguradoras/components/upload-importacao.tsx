@@ -14,6 +14,14 @@ type ResultadoProcessamento = {
   valor_total: number
 }
 
+type AvisoCompetencia = {
+  aviso_competencia: true
+  total_divergentes: number
+  total_linhas: number
+  competencia_declarada: string
+  competencias_no_arquivo: string[]
+}
+
 type Props = {
   seguradoras: Seguradora[]
   layouts: Layout[]
@@ -44,6 +52,7 @@ export function UploadImportacao({ seguradoras, layouts }: Props) {
   const [etapa, setEtapa] = useState<'declaracao' | 'processando' | 'resultado'>('declaracao')
   const [erro, setErro] = useState('')
   const [resultado, setResultado] = useState<ResultadoProcessamento | null>(null)
+  const [aviso, setAviso] = useState<AvisoCompetencia | null>(null)
 
   const [seguradoraId, setSeguradoraId] = useState('')
   const [layoutId, setLayoutId] = useState('')
@@ -64,21 +73,17 @@ export function UploadImportacao({ seguradoras, layouts }: Props) {
     setErro('')
   }
 
-  async function handleProcessar(e: React.FormEvent) {
-    e.preventDefault()
-    if (!arquivo) { setErro('Selecione um arquivo'); return }
-    if (!seguradoraId) { setErro('Selecione a seguradora'); return }
-    if (!layoutId) { setErro('Selecione o layout'); return }
-
+  async function enviarArquivo(forceCompetencia = false) {
     setErro('')
     setEtapa('processando')
 
     const fd = new FormData()
-    fd.append('arquivo', arquivo)
+    fd.append('arquivo', arquivo!)
     fd.append('layout_id', layoutId)
     fd.append('seguradora_id', seguradoraId)
     fd.append('competencia', competencia)
     if (diaPagamento) fd.append('dia_pagamento', diaPagamento)
+    if (forceCompetencia) fd.append('force', 'true')
 
     try {
       const resp = await fetch('/api/importacoes/processar', { method: 'POST', body: fd })
@@ -90,12 +95,26 @@ export function UploadImportacao({ seguradoras, layouts }: Props) {
         return
       }
 
+      if (data.aviso_competencia) {
+        setAviso(data)
+        setEtapa('declaracao')
+        return
+      }
+
       setResultado(data)
       setEtapa('resultado')
     } catch {
       setErro('Erro de conexão. Tente novamente.')
       setEtapa('declaracao')
     }
+  }
+
+  async function handleProcessar(e: React.FormEvent) {
+    e.preventDefault()
+    if (!arquivo) { setErro('Selecione um arquivo'); return }
+    if (!seguradoraId) { setErro('Selecione a seguradora'); return }
+    if (!layoutId) { setErro('Selecione o layout'); return }
+    await enviarArquivo(false)
   }
 
   const inputCls =
@@ -300,6 +319,52 @@ export function UploadImportacao({ seguradoras, layouts }: Props) {
           )}
         </label>
       </div>
+
+      {/* Modal de aviso de competência divergente */}
+      {aviso && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 flex flex-col gap-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl mt-0.5">⚠️</span>
+              <div>
+                <h3 className="font-semibold text-gray-900">Competência divergente</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Você declarou a competência{' '}
+                  <strong>{aviso.competencia_declarada.replace('-', '/')}</strong>, mas{' '}
+                  <strong>{aviso.total_divergentes}</strong> linha
+                  {aviso.total_divergentes !== 1 ? 's' : ''} do arquivo
+                  {aviso.total_divergentes !== 1 ? ' têm' : ' tem'} data diferente:
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {aviso.competencias_no_arquivo.map((c) => (
+                    <span key={c} className="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-mono">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500 mt-3">
+                  Deseja continuar mesmo assim? Todas as linhas serão lançadas em{' '}
+                  <strong>{aviso.competencia_declarada.replace('-', '/')}</strong>.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setAviso(null)}
+                className="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { setAviso(null); enviarArquivo(true) }}
+                className="px-6 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+              >
+                Continuar mesmo assim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {erro && (
         <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
