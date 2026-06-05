@@ -96,7 +96,8 @@ export async function atualizarProducao(id: string, formData: ProducaoFormData) 
     .single()
 
   if (!linha) return { error: 'Registro não encontrado' }
-  if (linha.tenant_id !== session.tenantId) return { error: 'Sem permissão' }
+  const isBpo = ['bpo_admin', 'bpo_operador'].includes(session.role)
+  if (!isBpo && linha.tenant_id !== session.tenantId) return { error: 'Sem permissão' }
 
   const { error } = await db
     .from('producao')
@@ -142,7 +143,8 @@ export async function excluirProducao(id: string) {
     .single()
 
   if (!linha) return { error: 'Registro não encontrado' }
-  if (linha.tenant_id !== session.tenantId) return { error: 'Sem permissão' }
+  const isBpoDel = ['bpo_admin', 'bpo_operador'].includes(session.role)
+  if (!isBpoDel && linha.tenant_id !== session.tenantId) return { error: 'Sem permissão' }
 
   const { error } = await db.from('producao').delete().eq('id', id)
   if (error) return { error: error.message }
