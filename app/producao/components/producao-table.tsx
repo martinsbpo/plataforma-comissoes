@@ -240,7 +240,6 @@ export function ProducaoTable({
           produtos={produtos}
           parceiros={parceiros}
           editRow={editRow}
-          defaultCompetencia={defaultCompetencia}
           onClose={() => setShowForm(false)}
           onSaved={(msg) => {
             setShowForm(false)

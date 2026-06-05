@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { criarProducao, atualizarProducao, ProducaoFormData } from '../actions'
 
 type Seguradora = { id: string; nome_fantasia: string | null; nome: string }
@@ -40,7 +40,6 @@ type Props = {
   produtos: Produto[]
   parceiros: Parceiro[]
   editRow?: ProducaoRow
-  defaultCompetencia?: string
   onClose: () => void
   onSaved: (msg: string) => void
 }
@@ -49,15 +48,13 @@ const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', curren
 
 export function ProducaoForm({
   seguradoras, grupos, produtos, parceiros,
-  editRow, defaultCompetencia, onClose, onSaved,
+  editRow, onClose, onSaved,
 }: Props) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
 
   const today = new Date().toISOString().slice(0, 10)
-  const currentMonth = today.slice(0, 7)
 
-  const [competencia, setCompetencia] = useState(editRow ? editRow.competencia.slice(0, 7) : (defaultCompetencia ?? currentMonth))
   const [data, setData] = useState(editRow?.data ?? today)
   const [seguradoraId, setSeguradoraId] = useState(editRow?.seguradora_id ?? '')
   const [segurado, setSegurado] = useState(editRow?.segurado ?? '')
@@ -122,13 +119,13 @@ export function ProducaoForm({
     e.preventDefault()
     setError('')
 
-    if (!seguradoraId || !segurado || !referencia || !comissao || !competencia || !data) {
-      setError('Preencha os campos obrigatórios: competência, data, seguradora, segurado, referência e comissão.')
+    if (!seguradoraId || !segurado || !referencia || !comissao || !data) {
+      setError('Preencha os campos obrigatórios: data, seguradora, segurado, referência e comissão.')
       return
     }
 
     const payload: ProducaoFormData = {
-      competencia,
+      competencia: data.slice(0, 7),
       data,
       seguradora_id: seguradoraId,
       segurado,
@@ -183,12 +180,6 @@ export function ProducaoForm({
 
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 px-6 py-4">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {/* Competência */}
-            <div>
-              <label className={labelCls}>Competência *</label>
-              <input type="month" value={competencia} onChange={e => setCompetencia(e.target.value)} className={inputCls} required />
-            </div>
-
             {/* Data */}
             <div>
               <label className={labelCls}>Data do negócio *</label>
