@@ -8,6 +8,7 @@ import { criarParceiro, atualizarParceiro, alterarStatusParceiro } from '../acti
 type Props = {
   id?: string
   tenantId: string
+  corretoras?: { id: string; nome: string; nome_fantasia: string | null }[]
   initial?: Partial<ParceiroFormData> & { status?: string }
   contasIniciais?: ContaBancaria[]
 }
@@ -38,9 +39,10 @@ function formatTelefone(v: string) {
   return n.replace(/^(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '')
 }
 
-export function ParceiroForm({ id, tenantId, initial, contasIniciais }: Props) {
+export function ParceiroForm({ id, tenantId, corretoras, initial, contasIniciais }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [selectedTenantId, setSelectedTenantId] = useState(tenantId)
 
   const [nome, setNome] = useState(initial?.nome ?? '')
   const [cpf, setCpf] = useState(initial?.cpf ?? '')
@@ -87,7 +89,7 @@ export function ParceiroForm({ id, tenantId, initial, contasIniciais }: Props) {
 
     startTransition(async () => {
       const payload: ParceiroFormData = {
-        tenant_id: tenantId,
+        tenant_id: selectedTenantId,
         nome,
         cpf,
         email,
@@ -126,6 +128,27 @@ export function ParceiroForm({ id, tenantId, initial, contasIniciais }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-8 max-w-3xl">
+
+      {/* Seletor de corretora (apenas BPO Admin) */}
+      {corretoras && corretoras.length > 0 && (
+        <section className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-700">Corretora</h2>
+          <div>
+            <label className={labelCls}>Corretora *</label>
+            <select
+              required
+              value={selectedTenantId}
+              onChange={e => setSelectedTenantId(e.target.value)}
+              className={inputCls}
+            >
+              <option value="">Selecione a corretora...</option>
+              {corretoras.map(c => (
+                <option key={c.id} value={c.id}>{c.nome_fantasia ?? c.nome}</option>
+              ))}
+            </select>
+          </div>
+        </section>
+      )}
 
       {/* Dados pessoais */}
       <section className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-5">

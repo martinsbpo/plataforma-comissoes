@@ -30,11 +30,17 @@ export default async function EditarParceiro({ params }: { params: Promise<{ id:
     redirect('/acesso-negado')
   }
 
-  const { data: contas } = await db
-    .from('parceiro_contas_bancarias')
-    .select('id, banco, agencia, conta, tipo_conta, chave_pix, apelido')
-    .eq('parceiro_id', id)
-    .order('created_at')
+  const isBpo = session.role === 'bpo_admin'
+
+  const [{ data: contas }, { data: corretoras }] = await Promise.all([
+    db.from('parceiro_contas_bancarias')
+      .select('id, banco, agencia, conta, tipo_conta, chave_pix, apelido')
+      .eq('parceiro_id', id)
+      .order('created_at'),
+    isBpo
+      ? db.from('tenants').select('id, nome, nome_fantasia').eq('status', 'ativo').order('nome_fantasia')
+      : Promise.resolve({ data: null }),
+  ])
 
   const nav = getNavForRole(session.role)
 
@@ -62,6 +68,7 @@ export default async function EditarParceiro({ params }: { params: Promise<{ id:
         <ParceiroForm
           id={id}
           tenantId={parceiro.tenant_id}
+          corretoras={isBpo ? (corretoras ?? []) : undefined}
           initial={{
             nome: parceiro.nome,
             cpf: parceiro.cpf,
