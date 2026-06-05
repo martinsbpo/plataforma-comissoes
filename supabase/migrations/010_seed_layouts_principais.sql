@@ -169,7 +169,7 @@ BEGIN
         (v_lay_id, 'nome_segurado',    '0',  NULL),
         (v_lay_id, 'cpf_segurado',     '1',  NULL),
         (v_lay_id, 'produto',          '3',  NULL),
-        (v_lay_id, 'data_competencia', '10', 'DD/MM/YYYY'),
+        (v_lay_id, 'data_competencia', '5',  'DD/MM/YYYY'),
         (v_lay_id, 'valor_base',       '12', NULL),
         (v_lay_id, 'pct_comissao',     '13', NULL),
         (v_lay_id, 'valor_bruto',      '14', NULL);
