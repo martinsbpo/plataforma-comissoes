@@ -210,4 +210,57 @@ BEGIN
 
   END IF;
 
+
+  -- ============================================================
+  -- ICATU SEGUROS — Vida e Previdência Empresarial
+  -- Formato: TXT com separador ;  |  Encoding: UTF-8 com BOM
+  -- Linha cabeçalho: 1  |  Primeira linha dados: 2
+  --
+  --  0  Estipulante  → nome_segurado
+  --  2  Apólice      → referencia
+  --  4  Competência  → data_competencia  (YYYYMM)
+  --  5  Prêmio       → valor_base
+  --  6  Comissão     → valor_bruto
+  --
+  -- Grupo fixo: Vida e Previdência
+  -- Produto fixo: Vida em Grupo
+  -- ============================================================
+
+  -- Reutiliza v_seg_id da Icatu já buscado acima
+  SELECT id INTO v_seg_id
+  FROM public.seguradoras
+  WHERE nome ILIKE '%icatu%' OR nome_fantasia ILIKE '%icatu%'
+  LIMIT 1;
+
+  IF v_seg_id IS NOT NULL AND v_prod_grupo IS NOT NULL THEN
+    INSERT INTO public.seguradora_layouts (
+      seguradora_id, nome, formato, separador, encoding,
+      linha_cabecalho, primeira_linha_dados,
+      grupo_produto_fixo_id, produto_fixo_id,
+      extensoes_esperadas,
+      status
+    ) VALUES (
+      v_seg_id,
+      'Vida e Previdência Empresarial — TXT Mensal',
+      'txt', ';', 'auto',
+      1, 2,
+      v_grp_vida, v_prod_grupo,
+      ARRAY['.txt', '.csv'],
+      'ativo'
+    )
+    ON CONFLICT DO NOTHING
+    RETURNING id INTO v_lay_id;
+
+    IF v_lay_id IS NOT NULL THEN
+      INSERT INTO public.layout_mapeamentos
+        (layout_id, campo_sistema, coluna_arquivo, formato_data)
+      VALUES
+        (v_lay_id, 'referencia',       '2', NULL),
+        (v_lay_id, 'nome_segurado',    '0', NULL),
+        (v_lay_id, 'data_competencia', '4', 'YYYYMM'),
+        (v_lay_id, 'valor_base',       '5', NULL),
+        (v_lay_id, 'valor_bruto',      '6', NULL);
+    END IF;
+  END IF;
+
 END $$;
