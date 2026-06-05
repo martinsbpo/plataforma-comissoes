@@ -8,11 +8,12 @@
 
 DO $$
 DECLARE
-  v_seg_id  uuid;
-  v_lay_id  uuid;
-  v_grp_vida uuid := '10000000-0000-0000-0000-000000000001'; -- Vida e Previdência
+  v_seg_id          uuid;
+  v_lay_id          uuid;
+  v_grp_vida        uuid := '10000000-0000-0000-0000-000000000001'; -- Vida e Previdência
   v_prod_individual uuid;
   v_prod_grupo      uuid;
+  v_prod_prev       uuid;
 BEGIN
 
   -- IDs dos produtos Vida Individual e Vida em Grupo
@@ -23,6 +24,10 @@ BEGIN
   SELECT id INTO v_prod_grupo
   FROM public.produtos
   WHERE grupo_produto_id = v_grp_vida AND nome = 'Vida em Grupo';
+
+  SELECT id INTO v_prod_prev
+  FROM public.produtos
+  WHERE grupo_produto_id = v_grp_vida AND nome = 'Previdência';
 
   -- ============================================================
   -- MONGERAL AEGON
@@ -123,20 +128,20 @@ BEGIN
 
 
   -- ============================================================
-  -- ICATU SEGUROS
-  -- (mapeamento a confirmar — placeholder por ora)
+  -- ICATU SEGUROS — Vida e Previdência
   -- Formato: CSV com separador ;  |  Encoding: UTF-8
   -- Linha cabeçalho: 1  |  Primeira linha dados: 2
   --
-  -- Mapeamento provisório (será atualizado após validação):
-  --  0  Cliente      → nome_segurado
-  --  1  CPF          → cpf_segurado
-  --  3  Produto      → produto (de-para a definir)
-  --  8  Proposta     → referencia
-  -- 10  Vencimento   → data_competencia  (DD/MM/YYYY)  ← confirmar
-  -- 12  Valor base   → valor_base        (tem prefixo R$)
-  -- 13  %            → pct_comissao      (ex: 20.00%)
-  -- 14  Comissão     → valor_bruto       (tem prefixo R$)
+  --  0  Cliente            → nome_segurado
+  --  1  CPF                → cpf_segurado
+  --  3  Produto            → produto (de-para)
+  --  5  Data de pagamento  → data_competencia  (DD/MM/YYYY)
+  --  8  Proposta           → referencia
+  -- 12  Valor base         → valor_base
+  -- 13  %                  → pct_comissao
+  -- 14  Comissão           → valor_bruto
+  --
+  -- Grupo fixo: Vida e Previdência
   -- ============================================================
 
   SELECT id INTO v_seg_id
@@ -148,13 +153,15 @@ BEGIN
     INSERT INTO public.seguradora_layouts (
       seguradora_id, nome, formato, separador, encoding,
       linha_cabecalho, primeira_linha_dados,
+      grupo_produto_fixo_id,
       extensoes_esperadas,
       status
     ) VALUES (
       v_seg_id,
-      'Padrão CSV Mensal',
+      'Vida e Previdência — CSV Mensal',
       'csv', ';', 'auto',
       1, 2,
+      v_grp_vida,
       ARRAY['.csv'],
       'ativo'
     )
@@ -174,6 +181,33 @@ BEGIN
         (v_lay_id, 'pct_comissao',     '13', NULL),
         (v_lay_id, 'valor_bruto',      '14', NULL);
     END IF;
+
+    -- De-para: Produto → Previdência
+    IF v_prod_prev IS NOT NULL THEN
+      INSERT INTO public.produto_depara (seguradora_id, texto_relatorio, grupo_produto_id, produto_id)
+      VALUES
+        (v_seg_id, 'VGBL ALTA RENDA - RELAC. ELETR',  v_grp_vida, v_prod_prev),
+        (v_seg_id, 'PGBL ALTA RENDA - RELAC. ELETR',  v_grp_vida, v_prod_prev),
+        (v_seg_id, 'VGBL ALTA RENDA - RELAC ELETRÔ',  v_grp_vida, v_prod_prev),
+        (v_seg_id, 'PGBL ALTA RENDA - RELAC ELETRÔ',  v_grp_vida, v_prod_prev),
+        (v_seg_id, 'VGBL ALTA RENDA - RELAC ELETRÃ"', v_grp_vida, v_prod_prev),
+        (v_seg_id, 'PGBL ALTA RENDA - RELAC ELETRÃ"', v_grp_vida, v_prod_prev),
+        (v_seg_id, 'VGBL ALTA RENDA',                 v_grp_vida, v_prod_prev),
+        (v_seg_id, 'PGBL ALTA RENDA',                 v_grp_vida, v_prod_prev)
+      ON CONFLICT (seguradora_id, texto_relatorio) DO NOTHING;
+    END IF;
+
+    -- De-para: Produto → Vida Individual
+    IF v_prod_individual IS NOT NULL THEN
+      INSERT INTO public.produto_depara (seguradora_id, texto_relatorio, grupo_produto_id, produto_id)
+      VALUES
+        (v_seg_id, 'UNIQUE VIDA',              v_grp_vida, v_prod_individual),
+        (v_seg_id, 'ESSENCIAL-CANAL CORRETOR', v_grp_vida, v_prod_individual),
+        (v_seg_id, 'ESSENCIAL PLATAFORMISTA',  v_grp_vida, v_prod_individual),
+        (v_seg_id, 'HORIZONTE CANAL CORRETOR', v_grp_vida, v_prod_individual)
+      ON CONFLICT (seguradora_id, texto_relatorio) DO NOTHING;
+    END IF;
+
   END IF;
 
 END $$;
