@@ -103,6 +103,7 @@ export function ProducaoForm({
     }
 
     const payload: ProducaoFormData = {
+      tenant_id: tenantId,
       data,
       seguradora_id: seguradoraId,
       segurado,

@@ -12,6 +12,7 @@ function admin() {
 }
 
 export type ProducaoFormData = {
+  tenant_id?: string     // explícito quando BPO Admin cadastra para outra corretora
   data: string           // YYYY-MM-DD
   seguradora_id: string
   segurado: string
@@ -37,12 +38,13 @@ export async function criarProducao(formData: ProducaoFormData) {
   }
 
   const db = admin()
+  const tenantId = formData.tenant_id ?? session.tenantId
 
   // Aviso de duplicata (não bloqueante)
   const { data: dup } = await db
     .from('producao')
     .select('id')
-    .eq('tenant_id', session.tenantId)
+    .eq('tenant_id', tenantId)
     .eq('seguradora_id', formData.seguradora_id)
     .eq('referencia', formData.referencia.trim().toUpperCase())
     .limit(1)
@@ -51,7 +53,7 @@ export async function criarProducao(formData: ProducaoFormData) {
   const { data, error } = await db
     .from('producao')
     .insert({
-      tenant_id: session.tenantId,
+      tenant_id: tenantId,
       data: formData.data,
       seguradora_id: formData.seguradora_id,
       segurado: formData.segurado,
