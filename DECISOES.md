@@ -59,7 +59,10 @@
 | E2.S3 — Layouts de Importação | ✅ Concluído | Migration 008, /admin/layouts, form com mapeamento de colunas |
 | E3 — Engine de Importação | ✅ Concluído | Parser TXT/CSV/XLSX/PDF, Route Handler /api/importacoes/processar, de-para automático |
 | E3 — Tela de Importação | ✅ Concluído | /seguradoras (upload + histórico), /seguradoras/[id] (detalhe + resolução + confirmação) |
-| E4 | ⏳ Em andamento | Stories aprovadas, aguardando implementação |
+| E4.S1 — Input manual de produção | ✅ Concluído | /producao, modal, cálculo automático, filtros, migration 012 |
+| E4.S2 — Importação de planilha | ✅ Concluído | /api/producao/importar, mapeamento automático, dedup, XLSX/CSV |
+| E4.S3 — Vinculação com relatórios | ✅ Concluído | revincularpProducao, botão Revincular, badge de status |
+| E4.S4 — Exportação da base | ✅ Concluído | /api/producao/exportar, 20 colunas, respeita filtros |
 
 > Status sugeridos: ⏳ Em andamento · ✅ Concluído · ⚠️ Pendente revisão
 
