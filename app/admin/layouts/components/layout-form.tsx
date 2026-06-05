@@ -37,18 +37,34 @@ type Props = {
 }
 
 const CAMPOS_SISTEMA = [
-  { value: 'referencia',        label: 'Referência / Nº Apólice', isDate: false },
-  { value: 'nome_segurado',     label: 'Nome do Segurado',         isDate: false },
-  { value: 'cpf_segurado',      label: 'CPF do Segurado',          isDate: false },
-  { value: 'data_competencia',  label: 'Data de Competência',      isDate: true  },
-  { value: 'grupo_produto',     label: 'Grupo / Ramo',             isDate: false },
-  { value: 'produto',           label: 'Produto',                  isDate: false },
-  { value: 'valor_base',        label: 'Valor Base (prêmio)',       isDate: false },
-  { value: 'pct_comissao',      label: '% Comissão',               isDate: false },
-  { value: 'valor_angariacao',  label: 'Valor Angariação',         isDate: false },
-  { value: 'valor_vitalicio',   label: 'Valor Vitalício',          isDate: false },
-  { value: 'valor_bruto',       label: 'Valor Bruto Total',        isDate: false },
-  { value: 'valor_estorno',     label: 'Valor Estorno',            isDate: false },
+  // Identificação
+  { value: 'referencia',          label: 'Referência / Nº Apólice',  isDate: false, group: 'Identificação' },
+  { value: 'nome_segurado',       label: 'Nome do Segurado',          isDate: false, group: 'Identificação' },
+  { value: 'cpf_segurado',        label: 'CPF do Segurado',           isDate: false, group: 'Identificação' },
+  { value: 'data_competencia',    label: 'Data de Competência',       isDate: true,  group: 'Identificação' },
+  { value: 'grupo_produto',       label: 'Grupo / Ramo',              isDate: false, group: 'Identificação' },
+  { value: 'produto',             label: 'Produto',                   isDate: false, group: 'Identificação' },
+  // Valores base
+  { value: 'valor_base',          label: 'Valor Base (prêmio)',       isDate: false, group: 'Valores' },
+  { value: 'parcela_comissionada',label: 'Parcela Comissionada',      isDate: false, group: 'Valores' },
+  // Comissão (carteira)
+  { value: 'valor_bruto',         label: 'Valor Comissão (carteira)', isDate: false, group: 'Comissão' },
+  { value: 'pct_comissao',        label: '% Comissão (carteira)',     isDate: false, group: 'Comissão' },
+  // Angariação
+  { value: 'valor_angariacao',    label: 'Valor Angariação',          isDate: false, group: 'Angariação' },
+  { value: 'pct_angariacao',      label: '% Angariação',              isDate: false, group: 'Angariação' },
+  // Vitalício
+  { value: 'valor_vitalicio',     label: 'Valor Vitalício',           isDate: false, group: 'Vitalício' },
+  { value: 'pct_vitalicio',       label: '% Vitalício',               isDate: false, group: 'Vitalício' },
+  // Estorno
+  { value: 'valor_estorno',       label: 'Valor Estorno',             isDate: false, group: 'Estorno' },
+  { value: 'pct_estorno',         label: '% Estorno',                 isDate: false, group: 'Estorno' },
+  // Incentivo
+  { value: 'valor_incentivo',     label: 'Valor Incentivo',           isDate: false, group: 'Incentivo' },
+  { value: 'pct_incentivo',       label: '% Incentivo',               isDate: false, group: 'Incentivo' },
+  // Bonificação
+  { value: 'valor_bonificacao',   label: 'Valor Bonificação',         isDate: false, group: 'Bonificação' },
+  { value: 'pct_bonificacao',     label: '% Bonificação',             isDate: false, group: 'Bonificação' },
 ]
 
 const SEPARADORES = [
@@ -347,32 +363,52 @@ export function LayoutForm({ seguradoras, grupos, produtos, layout }: Props) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {CAMPOS_SISTEMA.map((c) => (
-                <tr key={c.value}>
-                  <td className="py-2 pr-4 text-gray-700">{c.label}</td>
-                  <td className="py-2 pr-4">
-                    <input
-                      value={mapeamentos[c.value]?.coluna_arquivo ?? ''}
-                      onChange={(e) => setMapField(c.value, 'coluna_arquivo', e.target.value)}
-                      placeholder="nome ou índice"
-                      className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B7291]/30"
-                    />
-                  </td>
-                  <td className="py-2">
-                    {c.isDate ? (
-                      <input
-                        value={mapeamentos[c.value]?.formato_data ?? ''}
-                        onChange={(e) => setMapField(c.value, 'formato_data', e.target.value)}
-                        placeholder="DD/MM/YYYY"
-                        className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B7291]/30"
-                      />
-                    ) : (
-                      <span className="text-gray-300 text-xs">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+            <tbody>
+              {(() => {
+                const groups = [...new Set(CAMPOS_SISTEMA.map((c) => c.group))]
+                return groups.map((g) => (
+                  <>
+                    <tr key={`g-${g}`}>
+                      <td
+                        colSpan={3}
+                        className="pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wide"
+                      >
+                        {g}
+                      </td>
+                    </tr>
+                    {CAMPOS_SISTEMA.filter((c) => c.group === g).map((c) => (
+                      <tr key={c.value} className="border-t border-gray-50">
+                        <td className="py-2 pr-4 text-gray-700">{c.label}</td>
+                        <td className="py-2 pr-4">
+                          <input
+                            value={mapeamentos[c.value]?.coluna_arquivo ?? ''}
+                            onChange={(e) => setMapField(c.value, 'coluna_arquivo', e.target.value)}
+                            placeholder="nome ou índice"
+                            className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B7291]/30"
+                          />
+                        </td>
+                        <td className="py-2">
+                          {c.isDate ? (
+                            <select
+                              value={mapeamentos[c.value]?.formato_data ?? 'DD/MM/YYYY'}
+                              onChange={(e) => setMapField(c.value, 'formato_data', e.target.value)}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B7291]/30"
+                            >
+                              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                              <option value="MM/YYYY">MM/YYYY</option>
+                              <option value="YYYYMM">YYYYMM (ex: 202605)</option>
+                              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                              <option value="YYYYMMDD">YYYYMMDD</option>
+                            </select>
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </>
+                ))
+              })()}
             </tbody>
           </table>
         </div>

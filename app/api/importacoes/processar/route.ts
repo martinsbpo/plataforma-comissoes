@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Processar arquivo
-  let linhasParseadas
+  let linhasParseadas: Awaited<ReturnType<typeof parseArquivo>>
   try {
     linhasParseadas = await parseArquivo(buffer, {
       formato: layout.formato,
@@ -128,7 +128,19 @@ export async function POST(req: NextRequest) {
   }
 
   // Inserir linhas
-  type TipoValor = 'angariacao' | 'vitalicio' | 'comissao' | 'estorno'
+  type TipoValor = 'angariacao' | 'vitalicio' | 'comissao' | 'estorno' | 'incentivo' | 'bonificacao'
+
+  // Mapa tipo → pct correspondente
+  function getPct(linha: typeof linhasParseadas[0], tipo: TipoValor): number | null {
+    if (tipo === 'angariacao')   return linha.pct_angariacao ?? null
+    if (tipo === 'vitalicio')    return linha.pct_vitalicio ?? null
+    if (tipo === 'comissao')     return linha.pct_comissao ?? null
+    if (tipo === 'estorno')      return linha.pct_estorno ?? null
+    if (tipo === 'incentivo')    return linha.pct_incentivo ?? null
+    if (tipo === 'bonificacao')  return linha.pct_bonificacao ?? null
+    return null
+  }
+
   const linhasDb = []
   let totalOk = 0
   let totalPendentes = 0
@@ -146,15 +158,15 @@ export async function POST(req: NextRequest) {
         ? 'nao_mapeado'
         : 'ok'
 
-    // Determinar tipo de valor
+    // Todos os tipos de valor mapeados na linha
     const tiposValores: Array<[TipoValor, number | undefined]> = [
-      ['angariacao', linha.valor_angariacao],
-      ['vitalicio', linha.valor_vitalicio],
-      ['estorno', linha.valor_estorno],
+      ['angariacao',  linha.valor_angariacao],
+      ['vitalicio',   linha.valor_vitalicio],
+      ['estorno',     linha.valor_estorno],
+      ['incentivo',   linha.valor_incentivo],
+      ['bonificacao', linha.valor_bonificacao],
     ]
 
-    // Se tem angariacao ou vitalicio, criar linhas separadas
-    // Se só tem valor_bruto, criar como comissao
     const temEspecificos = tiposValores.some(([, v]) => v !== undefined && v !== 0)
 
     if (temEspecificos) {
@@ -172,7 +184,8 @@ export async function POST(req: NextRequest) {
           tipo_valor: tipo,
           valor,
           valor_base: linha.valor_base ?? null,
-          pct_comissao: linha.pct_comissao ?? null,
+          parcela_comissionada: linha.parcela_comissionada ?? null,
+          pct_comissao: getPct(linha, tipo),
           status_linha: isEstorno ? 'ok' : statusLinha,
           texto_produto_raw: linha.produto_raw ?? null,
           estorno_manual: false,
@@ -195,6 +208,7 @@ export async function POST(req: NextRequest) {
         tipo_valor: 'comissao' as TipoValor,
         valor,
         valor_base: linha.valor_base ?? null,
+        parcela_comissionada: linha.parcela_comissionada ?? null,
         pct_comissao: linha.pct_comissao ?? null,
         status_linha: statusLinha,
         texto_produto_raw: linha.produto_raw ?? null,
