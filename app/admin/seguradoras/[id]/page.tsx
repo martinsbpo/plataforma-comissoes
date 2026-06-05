@@ -65,7 +65,6 @@ export default async function EditarSeguradoraPage({ params }: { params: Promise
             nome: seg.nome,
             nome_fantasia: seg.nome_fantasia,
             cnpj: seg.cnpj,
-            codigo_susep: seg.codigo_susep,
             ramos: seg.ramos ?? [],
             politica_nf: seg.politica_nf,
             formato_estorno: seg.formato_estorno,
