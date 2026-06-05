@@ -255,11 +255,10 @@ BEGIN
       INSERT INTO public.layout_mapeamentos
         (layout_id, campo_sistema, coluna_arquivo, formato_data)
       VALUES
-        (v_lay_id, 'referencia',       '2', NULL),
-        (v_lay_id, 'nome_segurado',    '0', NULL),
-        (v_lay_id, 'data_competencia', '4', 'YYYYMM'),
-        (v_lay_id, 'valor_base',       '5', NULL),
-        (v_lay_id, 'valor_bruto',      '6', NULL);
+        (v_lay_id, 'referencia',    '2', NULL),
+        (v_lay_id, 'nome_segurado', '0', NULL),
+        (v_lay_id, 'valor_base',    '5', NULL),
+        (v_lay_id, 'valor_bruto',   '6', NULL);
     END IF;
   END IF;
 
