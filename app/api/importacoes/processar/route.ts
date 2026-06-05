@@ -118,11 +118,11 @@ export async function POST(req: NextRequest) {
   // Buscar de-para de produtos para esta seguradora
   const { data: depara } = await db
     .from('produto_depara')
-    .select('texto_original, produto_id, grupo_produto_id')
+    .select('texto_relatorio, produto_id, grupo_produto_id')
     .eq('seguradora_id', seguradoraId)
 
   const deparaMap = new Map(
-    (depara ?? []).map((d) => [d.texto_original.toUpperCase(), d])
+    (depara ?? []).map((d) => [d.texto_relatorio.toUpperCase(), d])
   )
 
   // Criar registro de importação

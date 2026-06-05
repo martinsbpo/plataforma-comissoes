@@ -262,4 +262,72 @@ BEGIN
     END IF;
   END IF;
 
+
+END $$;
+
+-- ============================================================
+-- ICATU CAPITALIZAÇÃO — seguradora separada (CNPJ diferente)
+-- Formato: TXT com separador ;  |  Encoding: UTF-8 com BOM
+-- Linha cabeçalho: 1  |  Primeira linha dados: 2
+--
+--  1  Nome Segurado       → nome_segurado
+--  3  Proposta            → referencia
+--  5  Parcela             → parcela_comissionada
+--  8  Valor Base R$       → valor_base
+--  9  %                   → pct_comissao
+-- 10  Comissão/Val Estorn → valor_bruto
+-- 14  Data Pagamento      → data_competencia  (DD/MM/YYYY)
+--
+-- Grupo fixo: Crédito e Outros  (UUID 10000000-0000-0000-0000-000000000006)
+-- Produto fixo: Capitalização
+-- ============================================================
+
+DO $$
+DECLARE
+  v_seg_id      uuid;
+  v_lay_id      uuid;
+  v_grp_credito uuid := '10000000-0000-0000-0000-000000000006';
+  v_prod_cap    uuid;
+BEGIN
+  SELECT id INTO v_prod_cap
+  FROM public.produtos
+  WHERE grupo_produto_id = v_grp_credito AND nome = 'Capitalização';
+
+  SELECT id INTO v_seg_id
+  FROM public.seguradoras
+  WHERE nome ILIKE '%icatu%capitaliz%' OR nome_fantasia ILIKE '%icatu%capitaliz%'
+  LIMIT 1;
+
+  IF v_seg_id IS NOT NULL AND v_prod_cap IS NOT NULL THEN
+    INSERT INTO public.seguradora_layouts (
+      seguradora_id, nome, formato, separador, encoding,
+      linha_cabecalho, primeira_linha_dados,
+      grupo_produto_fixo_id, produto_fixo_id,
+      extensoes_esperadas,
+      status
+    ) VALUES (
+      v_seg_id,
+      'Capitalização — TXT Mensal',
+      'txt', ';', 'auto',
+      1, 2,
+      v_grp_credito, v_prod_cap,
+      ARRAY['.txt', '.csv'],
+      'ativo'
+    )
+    ON CONFLICT DO NOTHING
+    RETURNING id INTO v_lay_id;
+
+    IF v_lay_id IS NOT NULL THEN
+      INSERT INTO public.layout_mapeamentos
+        (layout_id, campo_sistema, coluna_arquivo, formato_data)
+      VALUES
+        (v_lay_id, 'nome_segurado',        '1',  NULL),
+        (v_lay_id, 'referencia',           '3',  NULL),
+        (v_lay_id, 'parcela_comissionada', '5',  NULL),
+        (v_lay_id, 'valor_base',           '8',  NULL),
+        (v_lay_id, 'pct_comissao',         '9',  NULL),
+        (v_lay_id, 'valor_bruto',          '10', NULL),
+        (v_lay_id, 'data_competencia',     '14', 'DD/MM/YYYY');
+    END IF;
+  END IF;
 END $$;
