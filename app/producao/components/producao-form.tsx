@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { criarProducao, atualizarProducao, ProducaoFormData } from '../actions'
+import { QuickAddParceiro } from './quick-add-parceiro'
 
 type Seguradora = { id: string; nome_fantasia: string | null; nome: string }
 type GrupoProduto = { id: string; nome: string }
@@ -32,17 +33,23 @@ type Props = {
   grupos: GrupoProduto[]
   produtos: Produto[]
   parceiros: Parceiro[]
+  tenantId: string
   editRow?: ProducaoRow
   onClose: () => void
   onSaved: (msg: string) => void
 }
 
 export function ProducaoForm({
-  seguradoras, grupos, produtos, parceiros,
-  editRow, onClose, onSaved,
+  seguradoras, grupos, produtos, parceiros: parceirosIniciais,
+  tenantId, editRow, onClose, onSaved,
 }: Props) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
+  const [parceiros, setParceiros] = useState(parceirosIniciais)
+
+  function handleNovoParceiro(p: Parceiro) {
+    setParceiros(prev => [...prev, p])
+  }
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -201,37 +208,49 @@ export function ProducaoForm({
           {/* Parceiros */}
           <div className="mt-5 border-t border-gray-100 pt-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Parceiros (opcional)</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              {/* Indicador */}
               <div>
                 <label className={labelCls}>Indicador</label>
-                <select value={indicadorId} onChange={e => handleSelectIndicador(e.target.value)} className={inputCls}>
-                  <option value="">—</option>
-                  {parceiros.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </select>
+                <div className="flex gap-1.5">
+                  <select value={indicadorId} onChange={e => handleSelectIndicador(e.target.value)} className={inputCls}>
+                    <option value="">—</option>
+                    {parceiros.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                  </select>
+                  <QuickAddParceiro tenantId={tenantId} onCriado={p => { handleNovoParceiro(p); handleSelectIndicador(p.id) }} />
+                </div>
               </div>
               <div>
                 <label className={labelCls}>% Indicador</label>
                 <input type="number" step="0.01" min="0" max="100" value={pctIndicador} onChange={e => setPctIndicador(e.target.value)} className={inputCls} placeholder="0,00" disabled={!indicadorId} />
               </div>
 
+              {/* Corretor 1 */}
               <div>
                 <label className={labelCls}>Corretor 1</label>
-                <select value={corretor1Id} onChange={e => handleSelectCorretor1(e.target.value)} className={inputCls}>
-                  <option value="">—</option>
-                  {parceiros.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </select>
+                <div className="flex gap-1.5">
+                  <select value={corretor1Id} onChange={e => handleSelectCorretor1(e.target.value)} className={inputCls}>
+                    <option value="">—</option>
+                    {parceiros.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                  </select>
+                  <QuickAddParceiro tenantId={tenantId} onCriado={p => { handleNovoParceiro(p); handleSelectCorretor1(p.id) }} />
+                </div>
               </div>
               <div>
                 <label className={labelCls}>% Corretor 1</label>
                 <input type="number" step="0.01" min="0" max="100" value={pctCorretor1} onChange={e => setPctCorretor1(e.target.value)} className={inputCls} placeholder="0,00" disabled={!corretor1Id} />
               </div>
 
+              {/* Corretor 2 */}
               <div>
                 <label className={labelCls}>Corretor 2</label>
-                <select value={corretor2Id} onChange={e => handleSelectCorretor2(e.target.value)} className={inputCls}>
-                  <option value="">—</option>
-                  {parceiros.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                </select>
+                <div className="flex gap-1.5">
+                  <select value={corretor2Id} onChange={e => handleSelectCorretor2(e.target.value)} className={inputCls}>
+                    <option value="">—</option>
+                    {parceiros.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                  </select>
+                  <QuickAddParceiro tenantId={tenantId} onCriado={p => { handleNovoParceiro(p); handleSelectCorretor2(p.id) }} />
+                </div>
               </div>
               <div>
                 <label className={labelCls}>% Corretor 2</label>

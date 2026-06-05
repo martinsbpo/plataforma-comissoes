@@ -180,6 +180,7 @@ export function ProducaoTable({
           grupos={grupos}
           produtos={produtos}
           parceiros={parceiros}
+          tenantId={_tenantId}
           editRow={editRow}
           onClose={() => setShowForm(false)}
           onSaved={(msg) => { setShowForm(false); showToast(msg) }}
