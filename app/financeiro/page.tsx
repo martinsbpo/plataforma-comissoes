@@ -47,7 +47,7 @@ export default async function FinanceiroPage({
 
   if (corretoraId) {
     const [segRes, grupoRes, prodRes, parcRes] = await Promise.all([
-      db.from('seguradoras').select('id, nome_fantasia, nome').eq('tenant_id', corretoraId).eq('ativo', true).order('nome'),
+      db.from('seguradoras').select('id, nome_fantasia, nome').eq('tenant_id', corretoraId).eq('status', 'ativo').order('nome'),
       db.from('grupo_produtos').select('id, nome').order('nome'),
       db.from('produtos').select('id, nome, grupo_produto_id').order('nome'),
       db.from('parceiros').select('id, nome, pct_indicador, pct_corretor1, pct_corretor2').eq('tenant_id', corretoraId).eq('ativo', true).order('nome'),
