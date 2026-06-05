@@ -144,6 +144,14 @@ export async function calcularApuracao(
     agregado[chave].valor += Number(linha.valor)
   }
 
+  // Busca nomes de produtos para resolver nas linhas sem produção
+  const produtoIds = [...new Set(Object.values(agregado).map(a => a.produto_id).filter(Boolean))] as string[]
+  const produtoNomeMap: Record<string, string> = {}
+  if (produtoIds.length > 0) {
+    const { data: prods } = await db.from('produtos').select('id, nome').in('id', produtoIds)
+    for (const p of prods ?? []) produtoNomeMap[p.id] = p.nome
+  }
+
   // Busca produção do tenant (sem filtro de competência — vale para qualquer mês)
   const { data: producao } = await db
     .from('producao')
@@ -185,7 +193,7 @@ export async function calcularApuracao(
         seguradora_nome: item.seguradora_nome,
         referencia: item.referencia,
         segurado: item.segurado,
-        produto: null,
+        produto: item.produto_id ? (produtoNomeMap[item.produto_id] ?? null) : null,
         comissao_recebida: parseFloat(comissao.toFixed(2)),
       })
       continue

@@ -220,6 +220,7 @@ export function ApuracaoClient({
                       <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Seguradora</th>
                       <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Referência</th>
                       <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Segurado</th>
+                      <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Produto</th>
                       <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Comissão</th>
                       <th className="px-3 py-2.5" />
                     </tr>
@@ -230,6 +231,7 @@ export function ApuracaoClient({
                         <td className="px-3 py-2 text-gray-700">{linha.seguradora_nome}</td>
                         <td className="px-3 py-2 font-mono text-gray-700">{linha.referencia}</td>
                         <td className="px-3 py-2 text-gray-700">{linha.segurado}</td>
+                        <td className="px-3 py-2 text-gray-500">{linha.produto ?? '—'}</td>
                         <td className="px-3 py-2 text-right font-medium text-gray-900">{fmt(linha.comissao_recebida)}</td>
                         <td className="px-3 py-2 text-right">
                           <button
