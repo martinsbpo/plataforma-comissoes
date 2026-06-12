@@ -128,7 +128,7 @@ function mapRow(
 
   return {
     referencia: referencia || `L${linhaOriginal}`,
-    nome_segurado: nome_segurado || 'N/D',
+    nome_segurado: (nome_segurado || 'N/D').toUpperCase(),
     cpf_segurado: get('cpf_segurado') || undefined,
     data_competencia: dataRaw ? parseDateToISO(dataRaw, dtMap?.formato_data) : undefined,
     grupo_produto_raw: get('grupo_produto') || undefined,
