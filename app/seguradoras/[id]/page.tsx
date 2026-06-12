@@ -46,6 +46,7 @@ export default async function DetalheImportacaoPage({
       .select(`
         id, referencia, nome_segurado, cpf_segurado, tipo_valor, valor,
         status_linha, texto_produto_raw, grupo_produto_id, produto_id,
+        parcela_comissionada, total_parcelas,
         grupo_produto:grupo_produto_id (nome),
         produto:produto_id (nome)
       `)

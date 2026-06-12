@@ -18,6 +18,8 @@ type Linha = {
   texto_produto_raw: string | null
   grupo_produto_id: string | null
   produto_id: string | null
+  parcela_comissionada: number | null
+  total_parcelas: number | null
   grupo_produto?: { nome: string } | null
   produto?: { nome: string } | null
 }
@@ -301,6 +303,7 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Apólice</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Segurado</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Produto</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Parcela</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Tipo</th>
               <th className="text-right px-4 py-3 text-gray-600 font-medium">Valor</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Status</th>
@@ -329,6 +332,13 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
                       )}
                     </div>
                   )}
+                </td>
+                <td className="px-4 py-3 text-gray-600 text-xs font-mono">
+                  {l.parcela_comissionada != null
+                    ? l.total_parcelas != null
+                      ? `${l.parcela_comissionada}/${l.total_parcelas}`
+                      : String(l.parcela_comissionada)
+                    : '—'}
                 </td>
                 <td className="px-4 py-3 text-gray-600 text-xs">
                   {TIPO_LABEL[l.tipo_valor] ?? l.tipo_valor}
@@ -363,7 +373,7 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
             ))}
             {linhasFiltradas.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-sm">
                   Nenhuma linha encontrada.
                 </td>
               </tr>

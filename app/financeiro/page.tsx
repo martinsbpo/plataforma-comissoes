@@ -87,6 +87,8 @@ export default async function FinanceiroPage({
       referencia: string
       segurado: string
       produto: string | null
+      parcela_comissionada?: number | null
+      total_parcelas?: number | null
       comissao_recebida: number
       imposto_valor: number
       indicador_nome: string | null
@@ -121,6 +123,7 @@ export default async function FinanceiroPage({
         .from('apuracao_linhas')
         .select(`
           seguradora_id, referencia, segurado, produto,
+          parcela_comissionada, total_parcelas,
           comissao_recebida, imposto_valor,
           indicador_nome, pct_indicador, repasse_indicador,
           corretor1_nome, pct_corretor1, repasse_corretor1,
@@ -150,6 +153,8 @@ export default async function FinanceiroPage({
             referencia: l.referencia,
             segurado: l.segurado,
             produto: l.produto,
+            parcela_comissionada: (l as any).parcela_comissionada ?? null,
+            total_parcelas: (l as any).total_parcelas ?? null,
             comissao_recebida: l.comissao_recebida,
             imposto_valor: l.imposto_valor,
             indicador_nome: l.indicador_nome,

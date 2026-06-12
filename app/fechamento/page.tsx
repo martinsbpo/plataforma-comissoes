@@ -41,6 +41,8 @@ export default async function FechamentoPage({
     referencia: string
     segurado: string
     produto: string | null
+    parcela_comissionada: number | null
+    total_parcelas: number | null
     comissao_recebida: number
     aliquota_pct: number
     imposto_valor: number
@@ -80,6 +82,7 @@ export default async function FechamentoPage({
         .from('apuracao_linhas')
         .select(`
           apuracao_id, seguradora_id, referencia, segurado, produto,
+          parcela_comissionada, total_parcelas,
           comissao_recebida, aliquota_pct, imposto_valor,
           indicador_nome, pct_indicador, repasse_indicador,
           corretor1_nome, pct_corretor1, repasse_corretor1,
@@ -105,6 +108,8 @@ export default async function FechamentoPage({
           referencia: l.referencia,
           segurado: l.segurado,
           produto: l.produto,
+          parcela_comissionada: (l as any).parcela_comissionada ?? null,
+          total_parcelas: (l as any).total_parcelas ?? null,
           comissao_recebida: Number(l.comissao_recebida),
           aliquota_pct: Number(l.aliquota_pct),
           imposto_valor: Number(l.imposto_valor),

@@ -10,6 +10,8 @@ type Linha = {
   referencia: string
   segurado: string
   produto: string | null
+  parcela_comissionada: number | null
+  total_parcelas: number | null
   comissao_recebida: number
   aliquota_pct: number
   imposto_valor: number
@@ -206,6 +208,7 @@ export function FechamentoClient({ linhas, seguradoras, parceiros, competencias,
                 <th className="text-left px-3 py-2">Referência</th>
                 <th className="text-left px-3 py-2">Segurado</th>
                 <th className="text-left px-3 py-2">Produto</th>
+                <th className="text-left px-3 py-2">Parcela</th>
                 <th className="text-right px-3 py-2">Comissão</th>
                 <th className="text-right px-3 py-2">Imposto</th>
                 <th className="text-left px-3 py-2">Indicador</th>
@@ -228,6 +231,11 @@ export function FechamentoClient({ linhas, seguradoras, parceiros, competencias,
                   <td className="px-3 py-2 font-mono text-xs text-gray-700">{l.referencia}</td>
                   <td className="px-3 py-2 text-gray-700">{l.segurado}</td>
                   <td className="px-3 py-2 text-gray-500">{l.produto ?? '—'}</td>
+                  <td className="px-3 py-2 font-mono text-xs text-gray-500">
+                    {l.parcela_comissionada != null
+                      ? l.total_parcelas != null ? `${l.parcela_comissionada}/${l.total_parcelas}` : String(l.parcela_comissionada)
+                      : '—'}
+                  </td>
                   <td className="px-3 py-2 text-right text-gray-900">{fmt(l.comissao_recebida)}</td>
                   <td className="px-3 py-2 text-right text-red-600">{fmt(l.imposto_valor)}</td>
                   <td className="px-3 py-2 text-gray-600">{l.indicador_nome ?? '—'}</td>
@@ -245,7 +253,7 @@ export function FechamentoClient({ linhas, seguradoras, parceiros, competencias,
             </tbody>
             <tfoot className="bg-gray-50 border-t-2 border-gray-200 text-sm font-semibold">
               <tr>
-                <td colSpan={5} className="px-3 py-2 text-gray-600">Total ({linhas.length} registros)</td>
+                <td colSpan={6} className="px-3 py-2 text-gray-600">Total ({linhas.length} registros)</td>
                 <td className="px-3 py-2 text-right text-gray-900">{fmt(totalComissao)}</td>
                 <td className="px-3 py-2 text-right text-red-600">{fmt(totalImposto)}</td>
                 <td colSpan={2} className="px-3 py-2"></td>

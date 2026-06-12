@@ -27,6 +27,8 @@ type ApuracaoExistente = {
     referencia: string
     segurado: string
     produto: string | null
+    parcela_comissionada?: number | null
+    total_parcelas?: number | null
     comissao_recebida: number
     imposto_valor: number
     indicador_nome: string | null
@@ -332,7 +334,7 @@ function Totais({ total_comissao, total_imposto, total_repasses, total_resultado
   )
 }
 
-function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_nome?: string | null; seguradora_id?: string; referencia: string; segurado: string; produto: string | null; comissao_recebida: number; imposto_valor: number; indicador_nome: string | null; pct_indicador?: number | null; repasse_indicador: number; corretor1_nome: string | null; pct_corretor1?: number | null; repasse_corretor1: number; corretor2_nome: string | null; pct_corretor2?: number | null; repasse_corretor2: number; resultado: number }[]; readonly?: boolean }) {
+function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_nome?: string | null; seguradora_id?: string; referencia: string; segurado: string; produto: string | null; parcela_comissionada?: number | null; total_parcelas?: number | null; comissao_recebida: number; imposto_valor: number; indicador_nome: string | null; pct_indicador?: number | null; repasse_indicador: number; corretor1_nome: string | null; pct_corretor1?: number | null; repasse_corretor1: number; corretor2_nome: string | null; pct_corretor2?: number | null; repasse_corretor2: number; resultado: number }[]; readonly?: boolean }) {
   return (
     <div className={`bg-white rounded-xl border overflow-x-auto ${readonly ? 'border-gray-200' : 'border-gray-200'}`}>
       <table className="w-full text-xs whitespace-nowrap">
@@ -342,6 +344,7 @@ function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_n
             <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Referência</th>
             <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Segurado</th>
             <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Produto</th>
+            <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Parcela</th>
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Comissão</th>
             <th className="text-right px-3 py-2.5 text-gray-600 font-medium">Imposto</th>
             <th className="text-left px-3 py-2.5 text-gray-600 font-medium">Indicador</th>
@@ -363,6 +366,11 @@ function TabelaVinculadas({ linhas, readonly = false }: { linhas: { seguradora_n
               <td className="px-3 py-2 font-mono text-gray-700">{l.referencia}</td>
               <td className="px-3 py-2 text-gray-700 max-w-[160px] truncate">{l.segurado}</td>
               <td className="px-3 py-2 text-gray-500">{l.produto ?? '—'}</td>
+              <td className="px-3 py-2 font-mono text-gray-500 text-xs">
+                {l.parcela_comissionada != null
+                  ? l.total_parcelas != null ? `${l.parcela_comissionada}/${l.total_parcelas}` : String(l.parcela_comissionada)
+                  : '—'}
+              </td>
               <td className="px-3 py-2 text-right font-medium text-gray-900">{fmt(l.comissao_recebida)}</td>
               <td className="px-3 py-2 text-right text-gray-500">{fmt(l.imposto_valor)}</td>
               <td className="px-3 py-2 text-gray-600">{l.indicador_nome ?? '—'}</td>

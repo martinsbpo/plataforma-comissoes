@@ -11,6 +11,7 @@ export type LinhaParseada = {
   produto_raw?: string
   valor_base?: number
   parcela_comissionada?: number
+  total_parcelas?: number
   // Valores por tipo
   valor_angariacao?: number
   pct_angariacao?: number
@@ -134,6 +135,7 @@ function mapRow(
     produto_raw: get('produto') || undefined,
     valor_base: parseNumber(get('valor_base')),
     parcela_comissionada: parseNumber(get('parcela_comissionada')),
+    total_parcelas: parseNumber(get('total_parcelas')),
     valor_angariacao: parseNumber(get('valor_angariacao')),
     pct_angariacao: parseNumber(get('pct_angariacao')),
     valor_vitalicio: parseNumber(get('valor_vitalicio')),

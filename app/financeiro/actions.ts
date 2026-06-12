@@ -19,6 +19,8 @@ export type LinhaVinculada = {
   referencia: string
   segurado: string
   produto: string | null
+  parcela_comissionada: number | null
+  total_parcelas: number | null
   comissao_recebida: number
   aliquota_pct: number
   imposto_valor: number
@@ -97,7 +99,7 @@ export async function calcularApuracao(
   // Busca linhas dos relatórios (agrupa por referencia para somar valores)
   const { data: linhasRelatorio } = await db
     .from('importacao_linhas')
-    .select('id, importacao_id, referencia, nome_segurado, grupo_produto_id, produto_id, valor, tipo_valor')
+    .select('id, importacao_id, referencia, nome_segurado, grupo_produto_id, produto_id, valor, tipo_valor, parcela_comissionada, total_parcelas')
     .in('importacao_id', importacaoIds)
 
   if (!linhasRelatorio || linhasRelatorio.length === 0) {
@@ -123,6 +125,8 @@ export async function calcularApuracao(
     referencia: string
     segurado: string
     produto_id: string | null
+    parcela_comissionada: number | null
+    total_parcelas: number | null
     valor: number
   }> = {}
 
@@ -138,6 +142,8 @@ export async function calcularApuracao(
         referencia: linha.referencia.trim().toUpperCase(),
         segurado: linha.nome_segurado,
         produto_id: linha.produto_id,
+        parcela_comissionada: linha.parcela_comissionada ?? null,
+        total_parcelas: linha.total_parcelas ?? null,
         valor: 0,
       }
     }
@@ -222,6 +228,8 @@ export async function calcularApuracao(
       referencia: item.referencia,
       segurado: item.segurado,
       produto: produtoNome,
+      parcela_comissionada: item.parcela_comissionada,
+      total_parcelas: item.total_parcelas,
       comissao_recebida: parseFloat(comissao.toFixed(2)),
       aliquota_pct,
       imposto_valor,
@@ -295,6 +303,8 @@ export async function confirmarApuracao(
       referencia: l.referencia,
       segurado: l.segurado,
       produto: l.produto,
+      parcela_comissionada: l.parcela_comissionada,
+      total_parcelas: l.total_parcelas,
       comissao_recebida: l.comissao_recebida,
       aliquota_pct: l.aliquota_pct,
       imposto_valor: l.imposto_valor,
