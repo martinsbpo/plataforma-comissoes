@@ -144,7 +144,7 @@ export async function calcularApuracao(
     agregado[chave].valor += Number(linha.valor)
   }
 
-  // Busca nomes de produtos para resolver nas linhas sem produção
+  // Busca nomes de produtos (usado tanto nas vinculadas quanto nas sem produção)
   const produtoIds = [...new Set(Object.values(agregado).map(a => a.produto_id).filter(Boolean))] as string[]
   const produtoNomeMap: Record<string, string> = {}
   if (produtoIds.length > 0) {
@@ -209,7 +209,10 @@ export async function calcularApuracao(
     const rep_c2 = parseFloat((prod.corretor2_id ? base * (pct_c2 / 100) : 0).toFixed(2))
     const resultado = parseFloat((comissao - imposto_valor - rep_ind - rep_c1 - rep_c2).toFixed(2))
 
-    const produtoNome = resolvNome(prod.produto as NomeRow) ?? resolvNome(prod.grupo_produto as NomeRow)
+    // produto: preferência para o que veio do relatório da seguradora (tem de-para aplicado)
+    const produtoNome = (item.produto_id ? produtoNomeMap[item.produto_id] : null)
+      ?? resolvNome(prod.produto as NomeRow)
+      ?? resolvNome(prod.grupo_produto as NomeRow)
 
     vinculadas.push({
       importacao_linha_id: item.importacao_linha_id,
