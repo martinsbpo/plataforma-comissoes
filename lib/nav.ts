@@ -35,7 +35,7 @@ const ALL_NAV: NavGroup[] = [
     label: 'Financeiro',
     items: [
       { label: 'Apuração', href: '/financeiro', icon: '💰' },
-      { label: 'Repasse', href: '/financeiro/repasse', icon: '💸' },
+      { label: 'Repasses', href: '/financeiro/repasses', icon: '💸' },
       { label: 'Conciliação', href: '/banco/conciliacao', icon: '🔄' },
     ],
   },
@@ -66,7 +66,7 @@ const ROUTE_ROLES: Record<string, UserRole[]> = {
   '/producao':          ['bpo_admin', 'bpo_operador', 'corretora_gestor', 'corretora_operador'],
   '/parceiros':         ['bpo_admin', 'bpo_operador', 'corretora_gestor', 'corretora_operador'],
   '/financeiro':        ['bpo_admin', 'bpo_operador', 'bpo_visualizador', 'corretora_gestor', 'parceiro'],
-  '/financeiro/repasse':['bpo_admin', 'bpo_operador', 'bpo_visualizador', 'corretora_gestor', 'parceiro'],
+  '/financeiro/repasses':['bpo_admin', 'bpo_operador'],
   '/fechamento':        ['bpo_admin', 'bpo_operador'],
   '/admin/corretoras':  ['bpo_admin'],
   '/admin/seguradoras': ['bpo_admin'],
