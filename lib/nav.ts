@@ -42,7 +42,7 @@ const ALL_NAV: NavGroup[] = [
   {
     label: 'Fechamento',
     items: [
-      { label: 'Fechamento', href: '/fechamento', icon: '🔒' },
+      { label: 'Produção Apurada', href: '/fechamento', icon: '🔒' },
     ],
   },
   {
@@ -67,7 +67,7 @@ const ROUTE_ROLES: Record<string, UserRole[]> = {
   '/parceiros':         ['bpo_admin', 'bpo_operador', 'corretora_gestor', 'corretora_operador'],
   '/financeiro':        ['bpo_admin', 'bpo_operador', 'bpo_visualizador', 'corretora_gestor', 'parceiro'],
   '/financeiro/repasses':['bpo_admin', 'bpo_operador'],
-  '/fechamento':        ['bpo_admin', 'bpo_operador'],
+  '/fechamento':        ['bpo_admin', 'bpo_operador', 'bpo_visualizador'],
   '/admin/corretoras':  ['bpo_admin'],
   '/admin/seguradoras': ['bpo_admin'],
   '/admin/usuarios':    ['bpo_admin', 'corretora_gestor'],
