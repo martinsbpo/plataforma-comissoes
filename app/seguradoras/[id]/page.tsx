@@ -40,7 +40,6 @@ export default async function DetalheImportacaoPage({
         layout:layout_id (nome)
       `)
       .eq('id', id)
-      .eq('tenant_id', session.tenantId)
       .single(),
     db
       .from('importacao_linhas')
