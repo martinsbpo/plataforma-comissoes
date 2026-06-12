@@ -53,7 +53,7 @@ export default async function SeguradorasImportacaoPage({
   const corretoraId = isBpo ? (params.corretora ?? session.tenantId) : session.tenantId
 
   const [{ data: seguradoras }, { data: layouts }, historico] = await Promise.all([
-    db.from('seguradoras').select('id, nome_fantasia, nome').eq('tenant_id', corretoraId).eq('status', 'ativo').order('nome_fantasia'),
+    db.from('seguradoras').select('id, nome_fantasia, nome').eq('status', 'ativo').order('nome_fantasia'),
     db.from('seguradora_layouts').select('id, nome, formato, seguradora_id').eq('status', 'ativo').order('nome'),
     (() => {
       let q = db
