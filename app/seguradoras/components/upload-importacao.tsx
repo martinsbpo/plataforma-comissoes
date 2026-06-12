@@ -426,7 +426,7 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
                 Cancelar
               </button>
               <button
-                onClick={() => { setAviso(null); enviarArquivo(true) }}
+                onClick={async () => { setAviso(null); setEtapa('processando'); const { ok, data } = await enviarArquivo(arquivos[0], true); if (!ok) { setErro((data as {error:string}).error); setEtapa('declaracao'); } else { setResultado(data as ResultadoProcessamento); setEtapa('resultado'); } }}
                 className="px-6 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
               >
                 Continuar mesmo assim
