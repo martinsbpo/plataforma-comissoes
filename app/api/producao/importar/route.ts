@@ -11,7 +11,7 @@ function admin() {
 }
 
 // Normaliza string para matching
-const norm = (s: string) => s.trim().toUpperCase().replace(/\s+/g, ' ')
+const norm = (s: unknown) => String(s ?? '').trim().toUpperCase().replace(/\s+/g, ' ')
 
 // Mapeamento automático por nome de coluna
 const FIELD_ALIASES: Record<string, string> = {
@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
   const duplicataAcao = (formData.get('duplicata_acao') as string) ?? 'ignorar'  // ignorar | sobrescrever
   const linhaInicio = parseInt((formData.get('linha_inicio') as string) ?? '1')
   const preview = formData.get('preview') === 'true'
+  const tenantIdParam = formData.get('tenant_id') as string | null
+  const tenantId = tenantIdParam ?? session.tenantId
 
   if (!arquivo || !competencia) {
     return NextResponse.json({ error: 'arquivo e competencia são obrigatórios' }, { status: 400 })
@@ -108,23 +110,24 @@ export async function POST(req: NextRequest) {
   }
 
   // Carrega parceiros e grupos/produtos do tenant para matching
-  const [{ data: parceiros }, { data: seguradoras }, { data: grupos }, { data: produtos }, aliquota] = await Promise.all([
-    db.from('parceiros').select('id, nome').eq('tenant_id', session.tenantId).eq('status', 'ativo'),
+  const [{ data: parceiros }, { data: seguradoras }, { data: grupos }, { data: produtos }] = await Promise.all([
+    db.from('parceiros').select('id, nome').eq('tenant_id', tenantId).eq('status', 'ativo'),
     db.from('seguradoras').select('id, nome_fantasia, nome').eq('status', 'ativo'),
     db.from('grupos_produto').select('id, nome'),
     db.from('produtos').select('id, nome, grupo_produto_id'),
-    db.from('aliquotas_mensais').select('aliquota_global')
-      .eq('tenant_id', session.tenantId)
-      .eq('competencia', `${competencia}-01`)
-      .maybeSingle(),
   ])
-
-  const impostoPct = aliquota.data?.aliquota_global ?? 0
 
   const matchParceiro = (nome: string) => {
     if (!nome || !parceiros) return null
     const n = norm(nome)
-    return parceiros.find(p => norm(p.nome) === n) ?? null
+    // exact match
+    const exato = parceiros.find(p => norm(p.nome) === n)
+    if (exato) return exato
+    // partial: nome da planilha contém ou está contido no cadastro
+    return parceiros.find(p => {
+      const pc = norm(p.nome)
+      return pc.includes(n) || n.includes(pc)
+    }) ?? null
   }
   const matchSeguradora = (nome: string) => {
     if (!nome || !seguradoras) return null
@@ -133,8 +136,6 @@ export async function POST(req: NextRequest) {
   }
   const matchGrupo = (nome: string) => grupos?.find(g => norm(g.nome) === norm(nome)) ?? null
   const matchProduto = (nome: string) => produtos?.find(p => norm(p.nome) === norm(nome)) ?? null
-
-  const competenciaDate = `${competencia}-01`
 
   const linhasOk: Record<string, unknown>[] = []
   const linhasErro: { row: number; motivo: string; dados: unknown[] }[] = []
@@ -171,9 +172,8 @@ export async function POST(req: NextRequest) {
 
     const segurado = String(get('segurado') ?? '').trim()
 
-    if (!dataVal || comissaoVal == null || !referencia || !segurado) {
-      const faltando = [!dataVal && 'DATA', comissaoVal == null && 'COMISSÃO', !referencia && 'REFERÊNCIA', !segurado && 'SEGURADO'].filter(Boolean).join(', ')
-      linhasErro.push({ row: i + linhaInicio + 1, motivo: `Campos obrigatórios faltando: ${faltando}`, dados: row })
+    if (!referencia) {
+      linhasErro.push({ row: i + linhaInicio + 1, motivo: 'Campos obrigatórios faltando: REFERÊNCIA', dados: row })
       continue
     }
 
@@ -194,45 +194,29 @@ export async function POST(req: NextRequest) {
     const grupo = grupoProdutoRaw ? matchGrupo(grupoProdutoRaw) : null
     const produto = produtoRaw ? matchProduto(produtoRaw) : null
 
-    const pctInd = parseNum(get('pct_indicador'))
-    const pctCor1 = parseNum(get('pct_corretor1'))
-    const pctCor2 = parseNum(get('pct_corretor2'))
-    const impostosRaw = parseNum(get('impostos_pct'))
-    const impostosFinal = impostosRaw ?? impostoPct
-
-    // Cálculo de repasses
-    const impostosValor = comissaoVal * (impostosFinal / 100)
-    const baseRepasse = comissaoVal * (1 - impostosFinal / 100)
-    const repInd = indicador && pctInd ? baseRepasse * (pctInd / 100) : 0
-    const repCor1 = corretor1 && pctCor1 ? baseRepasse * (pctCor1 / 100) : 0
-    const repCor2 = corretor2 && pctCor2 ? baseRepasse * (pctCor2 / 100) : 0
-    const resultado = comissaoVal - impostosValor - repInd - repCor1 - repCor2
+    // Excel armazena percentuais como decimais (60% = 0.6) — converter para %
+    const normPct = (v: number | null) => v == null ? null : (v <= 1 ? parseFloat((v * 100).toFixed(4)) : v)
+    const pctInd = normPct(parseNum(get('pct_indicador')))
+    const pctCor1 = normPct(parseNum(get('pct_corretor1')))
+    const pctCor2 = normPct(parseNum(get('pct_corretor2')))
 
     linhasOk.push({
-      tenant_id: session.tenantId,
-      competencia: competenciaDate,
+      tenant_id: tenantId,
       data: dataVal,
       seguradora_id: seguradoraId,
-      segurado,
+      segurado: segurado || null,
       referencia,
       cpf_segurado: String(get('cpf_segurado') ?? '').trim() || null,
       grupo_produto_id: grupo?.id ?? null,
       produto_id: produto?.id ?? null,
-      comissao: comissaoVal,
+      comissao: comissaoVal ?? null,
       indicador_id: indicador?.id ?? null,
       pct_indicador: pctInd,
       corretor1_id: corretor1?.id ?? null,
       pct_corretor1: pctCor1,
       corretor2_id: corretor2?.id ?? null,
       pct_corretor2: pctCor2,
-      impostos_pct: impostosFinal,
-      repasse_indicador: parseFloat(repInd.toFixed(2)),
-      repasse_corretor1: parseFloat(repCor1.toFixed(2)),
-      repasse_corretor2: parseFloat(repCor2.toFixed(2)),
-      resultado: parseFloat(resultado.toFixed(2)),
       origem: 'importacao_planilha',
-      status_vinculacao: 'pendente',
-      status_periodo: 'aberto',
     })
   }
 
@@ -245,8 +229,7 @@ export async function POST(req: NextRequest) {
   const { data: existentes } = await db
     .from('producao')
     .select('id, referencia, seguradora_id')
-    .eq('tenant_id', session.tenantId)
-    .eq('competencia', competenciaDate)
+    .eq('tenant_id', tenantId)
     .in('referencia', referencias)
 
   const existentesSet = new Set((existentes ?? []).map(e => `${e.seguradora_id}::${e.referencia}`))
@@ -275,8 +258,7 @@ export async function POST(req: NextRequest) {
       const { data: existente } = await db
         .from('producao')
         .select('id')
-        .eq('tenant_id', session.tenantId)
-        .eq('competencia', competenciaDate)
+        .eq('tenant_id', tenantId)
         .eq('seguradora_id', linha.seguradora_id as string)
         .eq('referencia', linha.referencia as string)
         .maybeSingle()
@@ -293,6 +275,5 @@ export async function POST(req: NextRequest) {
     ignoradas: linhasErro.length + (duplicataAcao === 'ignorar' ? (linhasOk.length - linhasParaInserir.length - linhasParaSobrescrever.length) : 0),
     erros: linhasErro,
     alertas: linhasAlerta,
-    sem_imposto: impostoPct === 0,
   })
 }

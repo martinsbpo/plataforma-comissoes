@@ -47,7 +47,8 @@ type Props = {
 }
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const fmtDate = (iso: string) => {
+const fmtDate = (iso: string | null) => {
+  if (!iso) return '—'
   const [y, m, d] = iso.slice(0, 10).split('-')
   return `${d}/${m}/${y}`
 }
@@ -99,7 +100,7 @@ export function ProducaoTable({
           </button>
         )}
         {podeEditar && (
-          <ImportarPlanilha onImportado={showToast} />
+          <ImportarPlanilha onImportado={showToast} tenantId={_tenantId} />
         )}
         <a
           href={`/api/producao/exportar${exportParams ? '?' + exportParams : ''}`}

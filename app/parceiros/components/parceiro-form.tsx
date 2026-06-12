@@ -25,12 +25,41 @@ function validarCPF(cpf: string): boolean {
   return calc(n, 9) === parseInt(n[9]) && calc(n, 10) === parseInt(n[10])
 }
 
-function formatCPF(v: string) {
-  const n = v.replace(/\D/g, '').slice(0, 11)
+function validarCNPJ(cnpj: string): boolean {
+  const n = cnpj.replace(/\D/g, '')
+  if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false
+  const calc = (s: string, len: number, weights: number[]) => {
+    let sum = 0
+    for (let i = 0; i < len; i++) sum += parseInt(s[i]) * weights[i]
+    const r = sum % 11
+    return r < 2 ? 0 : 11 - r
+  }
+  const w1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+  const w2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+  return calc(n, 12, w1) === parseInt(n[12]) && calc(n, 13, w2) === parseInt(n[13])
+}
+
+function validarCPFouCNPJ(v: string): boolean {
+  const n = v.replace(/\D/g, '')
+  if (n.length === 11) return validarCPF(v)
+  if (n.length === 14) return validarCNPJ(v)
+  return false
+}
+
+function formatCPFouCNPJ(v: string) {
+  const n = v.replace(/\D/g, '').slice(0, 14)
+  if (n.length <= 11) {
+    return n
+      .replace(/^(\d{3})(\d)/, '$1.$2')
+      .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/\.(\d{3})(\d)/, '.$1-$2')
+  }
   return n
-    .replace(/^(\d{3})(\d)/, '$1.$2')
-    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1-$2')
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1.$2')
+    .replace(/(\d{4})(\d)/, '$1/$2')
+    .replace(/(\d{4})\/(\d{4})(\d)/, '$1/$2-$3')
 }
 
 function formatTelefone(v: string) {
@@ -76,8 +105,8 @@ export function ParceiroForm({ id, tenantId, corretoras, initial, contasIniciais
     e.preventDefault()
     setErro('')
 
-    if (!validarCPF(cpf)) {
-      setCpfErro('CPF inválido')
+    if (!validarCPFouCNPJ(cpf)) {
+      setCpfErro('CPF ou CNPJ inválido')
       return
     }
     setCpfErro('')
@@ -159,11 +188,11 @@ export function ParceiroForm({ id, tenantId, corretoras, initial, contasIniciais
             <input required value={nome} onChange={e => setNome(e.target.value)} className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>CPF *</label>
+            <label className={labelCls}>CPF / CNPJ *</label>
             <input
               required
               value={cpf}
-              onChange={e => { setCpf(formatCPF(e.target.value)); setCpfErro('') }}
+              onChange={e => { setCpf(formatCPFouCNPJ(e.target.value)); setCpfErro('') }}
               placeholder="000.000.000-00"
               className={`${inputCls} ${cpfErro ? 'border-red-400' : ''}`}
             />

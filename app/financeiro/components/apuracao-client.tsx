@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import * as XLSX from 'xlsx'
 import { calcularApuracao, confirmarApuracao, reabrirApuracao, ResultadoCalculo, LinhaSemProducao } from '../actions'
 import { ProducaoForm } from '@/app/producao/components/producao-form'
 import { criarProducao } from '@/app/producao/actions'
@@ -78,6 +79,32 @@ export function ApuracaoClient({
       if ('error' in r) { setErro(r.error); return }
       setResultado(r)
     })
+  }
+
+  function handleExportar() {
+    if (!resultado) return
+    const linhas = resultado.vinculadas.map(l => ({
+      'Seguradora': l.seguradora_nome ?? '',
+      'Referência': l.referencia,
+      'Segurado': l.segurado,
+      'Produto': l.produto ?? '',
+      'Comissão': l.comissao_recebida,
+      'Imposto': l.imposto_valor,
+      'Indicador': l.indicador_nome ?? '',
+      '% Indicador': l.pct_indicador ?? '',
+      'Rep. Indicador': l.repasse_indicador,
+      'Corretor 1': l.corretor1_nome ?? '',
+      '% Corretor 1': l.pct_corretor1 ?? '',
+      'Rep. Corretor 1': l.repasse_corretor1,
+      'Corretor 2': l.corretor2_nome ?? '',
+      '% Corretor 2': l.pct_corretor2 ?? '',
+      'Rep. Corretor 2': l.repasse_corretor2,
+      'Resultado': l.resultado,
+    }))
+    const ws = XLSX.utils.json_to_sheet(linhas)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Apuração')
+    XLSX.writeFile(wb, `apuracao_${competencia}.xlsx`)
   }
 
   function handleConfirmar() {
@@ -165,6 +192,14 @@ export function ApuracaoClient({
         >
           {pending ? 'Calculando...' : resultado ? 'Recalcular' : 'Calcular apuração'}
         </button>
+        {resultado && resultado.vinculadas.length > 0 && (
+          <button
+            onClick={handleExportar}
+            className="px-5 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Exportar Excel
+          </button>
+        )}
         {resultado && !resultado.sem_aliquota && (
           <button
             onClick={handleConfirmar}

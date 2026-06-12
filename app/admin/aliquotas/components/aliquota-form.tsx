@@ -9,6 +9,7 @@ type Corretora = { id: string; nome_fantasia: string | null; nome: string; regim
 type Props = {
   corretoras: Corretora[]
   temRetencaoISS: boolean
+  initial?: { id: string; tenant_id: string; competencia: string; aliquota_global: number; aliquota_iss: number | null; observacoes: string | null }
 }
 
 const REGIME_LABEL: Record<string, string> = {
@@ -17,15 +18,16 @@ const REGIME_LABEL: Record<string, string> = {
   lucro_real:       'Lucro Real',
 }
 
-export function AliquotaForm({ corretoras, temRetencaoISS }: Props) {
+export function AliquotaForm({ corretoras, temRetencaoISS, initial }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [tenantId, setTenantId] = useState('')
-  const [competencia, setCompetencia] = useState('')
-  const [aliqGlobal, setAliqGlobal] = useState('')
-  const [aliqISS, setAliqISS] = useState('')
-  const [obs, setObs] = useState('')
+  const [tenantId, setTenantId] = useState(initial?.tenant_id ?? '')
+  const [competencia, setCompetencia] = useState(initial?.competencia ? initial.competencia.slice(0, 7) : '')
+  const [aliqGlobal, setAliqGlobal] = useState(initial?.aliquota_global?.toString() ?? '')
+  const [aliqISS, setAliqISS] = useState(initial?.aliquota_iss?.toString() ?? '')
+  const [obs, setObs] = useState(initial?.observacoes ?? '')
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
+  const editando = !!initial
 
   const corretoraAtual = corretoras.find(c => c.id === tenantId)
 
@@ -59,10 +61,12 @@ export function AliquotaForm({ corretoras, temRetencaoISS }: Props) {
         return
       }
 
-      setSucesso('Alíquota registrada com sucesso!')
-      setAliqGlobal('')
-      setAliqISS('')
-      setObs('')
+      setSucesso(editando ? 'Alíquota atualizada com sucesso!' : 'Alíquota registrada com sucesso!')
+      if (!editando) {
+        setAliqGlobal('')
+        setAliqISS('')
+        setObs('')
+      }
       setTimeout(() => setSucesso(''), 3000)
     })
   }
@@ -71,8 +75,10 @@ export function AliquotaForm({ corretoras, temRetencaoISS }: Props) {
   const labelCls = 'block text-xs font-medium text-gray-600 mb-1'
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-5">
-      <h2 className="text-sm font-semibold text-gray-700">Registrar Alíquota do Mês</h2>
+    <form onSubmit={handleSubmit} id="aliquota-form" className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-5">
+      <h2 className="text-sm font-semibold text-gray-700">
+        {editando ? 'Editar Alíquota' : 'Registrar Alíquota do Mês'}
+      </h2>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -174,7 +180,7 @@ export function AliquotaForm({ corretoras, temRetencaoISS }: Props) {
           disabled={isPending}
           className="px-5 py-2 bg-[#5B7291] text-white text-sm rounded-lg hover:bg-[#4a6080] transition-colors disabled:opacity-50"
         >
-          {isPending ? 'Salvando...' : 'Registrar alíquota'}
+          {isPending ? 'Salvando...' : editando ? 'Salvar alterações' : 'Registrar alíquota'}
         </button>
       </div>
     </form>

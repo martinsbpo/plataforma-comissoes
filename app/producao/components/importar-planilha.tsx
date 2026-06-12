@@ -5,6 +5,7 @@ import { useState, useRef } from 'react'
 type Props = {
   onImportado: (msg: string) => void
   defaultCompetencia?: string
+  tenantId?: string
 }
 
 type PreviewData = {
@@ -33,7 +34,7 @@ const CAMPOS_SISTEMA = [
   { value: 'impostos_pct', label: 'IMPOSTOS %' },
 ]
 
-export function ImportarPlanilha({ onImportado, defaultCompetencia }: Props) {
+export function ImportarPlanilha({ onImportado, defaultCompetencia, tenantId }: Props) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<'upload' | 'mapeamento' | 'confirmando'>('upload')
   const [loading, setLoading] = useState(false)
@@ -45,7 +46,7 @@ export function ImportarPlanilha({ onImportado, defaultCompetencia }: Props) {
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [previewData, setPreviewData] = useState<PreviewData | null>(null)
   const [mapping, setMapping] = useState<Record<number, string>>({})
-  const [resultado, setResultado] = useState<{ importadas: number; ignoradas: number; alertas: number; sem_imposto: boolean } | null>(null)
+  const [resultado, setResultado] = useState<{ importadas: number; ignoradas: number; alertas: number; sem_imposto: boolean; erros?: { row: number; motivo: string }[]; alertasDetalhe?: { row: number; campo: string; valor: string }[] } | null>(null)
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -69,6 +70,7 @@ export function ImportarPlanilha({ onImportado, defaultCompetencia }: Props) {
       fd.append('competencia', competencia)
       fd.append('linha_inicio', String(linhaInicio))
       fd.append('preview', 'true')
+      if (tenantId) fd.append('tenant_id', tenantId)
 
       const res = await fetch('/api/producao/importar', { method: 'POST', body: fd })
       const data = await res.json()
@@ -95,12 +97,13 @@ export function ImportarPlanilha({ onImportado, defaultCompetencia }: Props) {
       fd.append('linha_inicio', String(linhaInicio))
       fd.append('mapeamento', JSON.stringify(mapping))
       fd.append('duplicata_acao', duplicataAcao)
+      if (tenantId) fd.append('tenant_id', tenantId)
 
       const res = await fetch('/api/producao/importar', { method: 'POST', body: fd })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Erro na importação'); return }
 
-      setResultado({ importadas: data.importadas, ignoradas: data.ignoradas, alertas: data.alertas?.length ?? 0, sem_imposto: data.sem_imposto })
+      setResultado({ importadas: data.importadas, ignoradas: data.ignoradas, alertas: data.alertas?.length ?? 0, sem_imposto: data.sem_imposto, erros: data.erros, alertasDetalhe: data.alertas })
       setStep('confirmando')
 
       if (data.importadas > 0) {
@@ -227,15 +230,36 @@ export function ImportarPlanilha({ onImportado, defaultCompetencia }: Props) {
               )}
 
               {step === 'confirmando' && resultado && (
-                <div className="text-center py-8">
-                  <p className="text-4xl mb-4">{resultado.importadas > 0 ? '✅' : '⚠️'}</p>
-                  <p className="text-base font-semibold text-gray-900">{resultado.importadas} linha(s) importada(s)</p>
-                  <p className="text-sm text-gray-500 mt-1">{resultado.ignoradas} ignorada(s) por erro ou duplicata</p>
-                  {resultado.alertas > 0 && (
-                    <p className="text-sm text-amber-600 mt-1">{resultado.alertas} alerta(s) de campo não reconhecido</p>
+                <div className="py-4">
+                  <div className="text-center mb-4">
+                    <p className="text-4xl mb-2">{resultado.importadas > 0 ? '✅' : '⚠️'}</p>
+                    <p className="text-base font-semibold text-gray-900">{resultado.importadas} linha(s) importada(s)</p>
+                    <p className="text-sm text-gray-500 mt-1">{resultado.ignoradas} ignorada(s) por erro ou duplicata</p>
+                    {resultado.sem_imposto && (
+                      <p className="text-sm text-red-500 mt-2">⚠️ Alíquota de imposto não cadastrada para este período — confira em Administração &gt; Alíquotas Mensais.</p>
+                    )}
+                  </div>
+                  {resultado.erros && resultado.erros.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs font-semibold text-red-600 mb-1">Erros ({resultado.erros.length}):</p>
+                      <div className="max-h-40 overflow-y-auto border border-red-100 rounded-lg bg-red-50 px-3 py-2 space-y-1">
+                        {resultado.erros.slice(0, 20).map((e, i) => (
+                          <p key={i} className="text-xs text-red-700">Linha {e.row}: {e.motivo}</p>
+                        ))}
+                        {resultado.erros.length > 20 && <p className="text-xs text-red-400">...e mais {resultado.erros.length - 20} erros</p>}
+                      </div>
+                    </div>
                   )}
-                  {resultado.sem_imposto && (
-                    <p className="text-sm text-red-500 mt-2">⚠️ Alíquota de imposto não cadastrada para este período — confira em Administração &gt; Alíquotas Mensais.</p>
+                  {resultado.alertasDetalhe && resultado.alertasDetalhe.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs font-semibold text-amber-600 mb-1">Alertas — não reconhecidos ({resultado.alertasDetalhe.length}):</p>
+                      <div className="max-h-32 overflow-y-auto border border-amber-100 rounded-lg bg-amber-50 px-3 py-2 space-y-1">
+                        {resultado.alertasDetalhe.slice(0, 15).map((a, i) => (
+                          <p key={i} className="text-xs text-amber-700">Linha {a.row} — {a.campo}: "{a.valor}"</p>
+                        ))}
+                        {resultado.alertasDetalhe.length > 15 && <p className="text-xs text-amber-400">...e mais {resultado.alertasDetalhe.length - 15}</p>}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

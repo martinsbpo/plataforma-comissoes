@@ -20,7 +20,7 @@ function formatCompetencia(dateStr: string) {
 export default async function AliquotasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tenant?: string; mes?: string }>
+  searchParams: Promise<{ tenant?: string; mes?: string; editar?: string }>
 }) {
   const session = await getSession()
   if (!session) redirect('/')
@@ -57,6 +57,9 @@ export default async function AliquotasPage({
   if (params.tenant) aliquotas = aliquotas.filter(a => a.tenant_id === params.tenant)
   if (params.mes) aliquotas = aliquotas.filter(a => a.competencia.startsWith(params.mes!))
 
+  const editarId = (await searchParams).editar
+  const aliquotaEditando = editarId ? (aliquotasRaw ?? []).find(a => a.id === editarId) : null
+
   const nav = getNavForRole(session.role)
 
   return (
@@ -73,10 +76,18 @@ export default async function AliquotasPage({
           </p>
         </div>
 
-        {/* Formulário de registro */}
+        {/* Formulário de registro/edição */}
         <AliquotaForm
           corretoras={corretoras ?? []}
           temRetencaoISS={temRetencaoISS}
+          initial={aliquotaEditando ? {
+            id: aliquotaEditando.id,
+            tenant_id: aliquotaEditando.tenant_id,
+            competencia: aliquotaEditando.competencia,
+            aliquota_global: aliquotaEditando.aliquota_global,
+            aliquota_iss: aliquotaEditando.aliquota_iss,
+            observacoes: aliquotaEditando.observacoes,
+          } : undefined}
         />
 
         {/* Filtros */}
@@ -118,6 +129,7 @@ export default async function AliquotasPage({
                 <th className="text-right px-4 py-3 text-gray-600 font-medium">Alíquota Global</th>
                 <th className="text-right px-4 py-3 text-gray-600 font-medium">ISS</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Período</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -151,6 +163,16 @@ export default async function AliquotasPage({
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
                           Aberto
                         </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {!a.periodo_fechado && (
+                        <a
+                          href={`/admin/aliquotas?editar=${a.id}#aliquota-form`}
+                          className="text-xs text-[#5B7291] hover:underline"
+                        >
+                          Editar
+                        </a>
                       )}
                     </td>
                   </tr>
