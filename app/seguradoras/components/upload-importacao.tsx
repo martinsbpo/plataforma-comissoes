@@ -59,7 +59,8 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
   const [layoutId, setLayoutId] = useState('')
   const [competencia, setCompetencia] = useState(competenciaOpcoes()[1].value)
   const [diaPagamento, setDiaPagamento] = useState('')
-  const [arquivo, setArquivo] = useState<File | null>(null)
+  const [arquivos, setArquivos] = useState<File[]>([])
+  const [progressos, setProgressos] = useState<{ nome: string; status: 'aguardando' | 'processando' | 'ok' | 'erro'; msg?: string }[]>([])
 
   const layoutsFiltrados = layouts.filter((l) => l.seguradora_id === seguradoraId)
 
@@ -68,18 +69,19 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
     setLayoutId('')
   }
 
-  function handleArquivo(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0] ?? null
-    setArquivo(f)
+  function handleArquivos(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    setArquivos(files)
     setErro('')
   }
 
-  async function enviarArquivo(forceCompetencia = false) {
-    setErro('')
-    setEtapa('processando')
+  function removerArquivo(idx: number) {
+    setArquivos(prev => prev.filter((_, i) => i !== idx))
+  }
 
+  async function enviarArquivo(arquivo: File, forceCompetencia = false): Promise<{ ok: boolean; data: ResultadoProcessamento | AvisoCompetencia | { error: string } }> {
     const fd = new FormData()
-    fd.append('arquivo', arquivo!)
+    fd.append('arquivo', arquivo)
     fd.append('layout_id', layoutId)
     fd.append('seguradora_id', seguradoraId)
     fd.append('competencia', competencia)
@@ -90,33 +92,70 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
     try {
       const resp = await fetch('/api/importacoes/processar', { method: 'POST', body: fd })
       const data = await resp.json()
-
-      if (!resp.ok) {
-        setErro(data.error ?? 'Erro ao processar arquivo')
-        setEtapa('declaracao')
-        return
-      }
-
-      if (data.aviso_competencia) {
-        setAviso(data)
-        setEtapa('declaracao')
-        return
-      }
-
-      setResultado(data)
-      setEtapa('resultado')
+      return { ok: resp.ok, data }
     } catch {
-      setErro('Erro de conexão. Tente novamente.')
-      setEtapa('declaracao')
+      return { ok: false, data: { error: 'Erro de conexão' } }
     }
   }
 
   async function handleProcessar(e: React.FormEvent) {
     e.preventDefault()
-    if (!arquivo) { setErro('Selecione um arquivo'); return }
+    if (arquivos.length === 0) { setErro('Selecione ao menos um arquivo'); return }
     if (!seguradoraId) { setErro('Selecione a seguradora'); return }
     if (!layoutId) { setErro('Selecione o layout'); return }
-    await enviarArquivo(false)
+
+    setErro('')
+
+    if (arquivos.length === 1) {
+      // Fluxo original para arquivo único (mantém aviso de competência)
+      setEtapa('processando')
+      const { ok, data } = await enviarArquivo(arquivos[0], false)
+      if (!ok) {
+        setErro((data as { error: string }).error ?? 'Erro ao processar arquivo')
+        setEtapa('declaracao')
+        return
+      }
+      if ((data as AvisoCompetencia).aviso_competencia) {
+        setAviso(data as AvisoCompetencia)
+        setEtapa('declaracao')
+        return
+      }
+      setResultado(data as ResultadoProcessamento)
+      setEtapa('resultado')
+      return
+    }
+
+    // Múltiplos arquivos: processa em sequência com progresso
+    setProgressos(arquivos.map(f => ({ nome: f.name, status: 'aguardando' })))
+    setEtapa('processando')
+
+    const resultados: ResultadoProcessamento[] = []
+    for (let i = 0; i < arquivos.length; i++) {
+      setProgressos(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'processando' } : p))
+      const { ok, data } = await enviarArquivo(arquivos[i], true) // force=true em lote para não parar
+      if (!ok || (data as { error?: string }).error) {
+        setProgressos(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'erro', msg: (data as { error?: string }).error ?? 'Erro' } : p))
+      } else {
+        const r = data as ResultadoProcessamento
+        resultados.push(r)
+        setProgressos(prev => prev.map((p, idx) => idx === i ? { ...p, status: 'ok', msg: `${r.total_ok} linhas OK` } : p))
+      }
+    }
+
+    // Agrega resultados
+    if (resultados.length > 0) {
+      setResultado({
+        importacao_id: resultados[resultados.length - 1].importacao_id,
+        total_linhas: resultados.reduce((s, r) => s + r.total_linhas, 0),
+        total_ok: resultados.reduce((s, r) => s + r.total_ok, 0),
+        total_pendentes: resultados.reduce((s, r) => s + r.total_pendentes, 0),
+        valor_total: resultados.reduce((s, r) => s + r.valor_total, 0),
+      })
+      setEtapa('resultado')
+    } else {
+      setErro('Nenhum arquivo foi processado com sucesso.')
+      setEtapa('declaracao')
+    }
   }
 
   const inputCls =
@@ -125,10 +164,25 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
 
   if (etapa === 'processando') {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="w-10 h-10 border-4 border-[#5B7291] border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-500">Processando arquivo, aguarde...</p>
-        <p className="text-xs text-gray-400">{arquivo?.name}</p>
+      <div className="flex flex-col gap-4 py-6">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-3 border-[#5B7291] border-t-transparent rounded-full animate-spin shrink-0" />
+          <p className="text-sm text-gray-600 font-medium">Processando arquivos...</p>
+        </div>
+        {progressos.length > 0 && (
+          <div className="border border-gray-200 rounded-xl divide-y divide-gray-100">
+            {progressos.map((p, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3 text-sm">
+                <span className="text-base">
+                  {p.status === 'aguardando' ? '⏳' : p.status === 'processando' ? '🔄' : p.status === 'ok' ? '✅' : '❌'}
+                </span>
+                <span className="flex-1 text-gray-700 truncate">{p.nome}</span>
+                <span className="text-xs text-gray-400">{p.msg ?? p.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {progressos.length === 0 && <p className="text-xs text-gray-400 text-center">{arquivos[0]?.name}</p>}
       </div>
     )
   }
@@ -188,7 +242,8 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
             onClick={() => {
               setEtapa('declaracao')
               setResultado(null)
-              setArquivo(null)
+              setArquivos([])
+              setProgressos([])
               if (fileRef.current) fileRef.current.value = ''
             }}
             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -297,29 +352,42 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
           Arquivo
         </h2>
-        <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-200 rounded-xl p-10 cursor-pointer hover:border-[#5B7291]/40 hover:bg-gray-50 transition-colors">
+        <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-200 rounded-xl p-8 cursor-pointer hover:border-[#5B7291]/40 hover:bg-gray-50 transition-colors">
           <input
             ref={fileRef}
             type="file"
-            onChange={handleArquivo}
+            onChange={handleArquivos}
             accept=".csv,.txt,.xlsx,.xls,.pdf"
+            multiple
             className="sr-only"
           />
-          <span className="text-3xl">{arquivo ? '📄' : '📂'}</span>
-          {arquivo ? (
+          <span className="text-3xl">{arquivos.length > 0 ? '📄' : '📂'}</span>
+          {arquivos.length > 0 ? (
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-900">{arquivo.name}</p>
-              <p className="text-xs text-gray-400 mt-1">
-                {(arquivo.size / 1024).toFixed(1)} KB — clique para trocar
+              <p className="text-sm font-medium text-gray-900">
+                {arquivos.length === 1 ? arquivos[0].name : `${arquivos.length} arquivos selecionados`}
               </p>
+              <p className="text-xs text-gray-400 mt-1">Clique para trocar</p>
             </div>
           ) : (
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-600">Clique para selecionar o arquivo</p>
-              <p className="text-xs text-gray-400 mt-1">CSV, TXT, XLSX, PDF</p>
+              <p className="text-sm font-medium text-gray-600">Clique para selecionar um ou mais arquivos</p>
+              <p className="text-xs text-gray-400 mt-1">CSV, TXT, XLSX, PDF — você pode selecionar vários de uma vez</p>
             </div>
           )}
         </label>
+        {arquivos.length > 1 && (
+          <div className="border border-gray-100 rounded-lg divide-y divide-gray-100">
+            {arquivos.map((f, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2 text-sm">
+                <span className="text-gray-400">📄</span>
+                <span className="flex-1 text-gray-700 truncate">{f.name}</span>
+                <span className="text-xs text-gray-400">{(f.size / 1024).toFixed(1)} KB</span>
+                <button type="button" onClick={() => removerArquivo(i)} className="text-gray-300 hover:text-red-400 text-lg leading-none">×</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Modal de aviso de competência divergente */}
@@ -377,10 +445,10 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
       <div className="flex justify-end">
         <button
           type="submit"
-          disabled={pending || !arquivo || !layoutId}
+          disabled={pending || arquivos.length === 0 || !layoutId}
           className="px-8 py-2.5 text-sm bg-[#5B7291] text-white rounded-lg hover:bg-[#4a6080] transition-colors disabled:opacity-50"
         >
-          Processar arquivo
+          {arquivos.length > 1 ? `Processar ${arquivos.length} arquivos` : 'Processar arquivo'}
         </button>
       </div>
     </form>
