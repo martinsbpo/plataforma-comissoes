@@ -251,10 +251,13 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
             Importar outro arquivo
           </button>
           <button
-            onClick={() => router.push(`/seguradoras/${resultado.importacao_id}`)}
+            onClick={() => arquivos.length > 1
+              ? router.push(`/seguradoras?aba=historico`)
+              : router.push(`/seguradoras/${resultado.importacao_id}`)
+            }
             className="px-6 py-2 text-sm bg-[#5B7291] text-white rounded-lg hover:bg-[#4a6080] transition-colors"
           >
-            {temPendentes ? 'Resolver pendências' : 'Ver importação'}
+            {arquivos.length > 1 ? 'Ver histórico' : temPendentes ? 'Resolver pendências' : 'Ver importação'}
           </button>
         </div>
       </div>
