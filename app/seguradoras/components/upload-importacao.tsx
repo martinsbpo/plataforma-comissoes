@@ -199,7 +199,7 @@ export function UploadImportacao({ seguradoras, layouts, tenantId }: Props) {
               <p className="font-semibold text-gray-900">
                 {temPendentes ? 'Arquivo processado com pendências' : 'Arquivo processado com sucesso'}
               </p>
-              <p className="text-sm text-gray-500">{arquivo?.name}</p>
+              <p className="text-sm text-gray-500">{arquivos.length === 1 ? arquivos[0].name : `${arquivos.length} arquivos`}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
