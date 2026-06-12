@@ -111,7 +111,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Fazer upload para Storage
-  const storagePath = `${tenantId}/${seguradoraId}/${competencia}/${Date.now()}_${arquivo.name}`
+  const nomeSeguro = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+  const storagePath = `${tenantId}/${seguradoraId}/${competencia}/${Date.now()}_${nomeSeguro}`
   const { error: uploadError } = await db.storage
     .from('importacoes')
     .upload(storagePath, buffer, { contentType: arquivo.type || 'application/octet-stream' })
