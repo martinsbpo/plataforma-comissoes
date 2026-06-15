@@ -37,7 +37,8 @@ export default async function DetalheImportacaoPage({
         id, status, total_linhas, total_ok, total_pendentes, valor_total,
         nome_arquivo, competencia, dia_pagamento, confirmado_em,
         seguradora:seguradora_id (nome_fantasia, nome),
-        layout:layout_id (nome)
+        layout:layout_id (nome),
+        corretora:tenant_id (nome, nome_fantasia)
       `)
       .eq('id', id)
       .single(),
@@ -74,6 +75,11 @@ export default async function DetalheImportacaoPage({
       <div className="max-w-5xl flex flex-col gap-6">
         <div className="flex items-start justify-between">
           <div>
+            {imp.corretora && (
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#5B7291] mb-1">
+                {imp.corretora.nome_fantasia ?? imp.corretora.nome}
+              </p>
+            )}
             <h1 className="text-xl font-semibold text-gray-900">
               {imp.seguradora?.nome_fantasia ?? imp.seguradora?.nome}
             </h1>
