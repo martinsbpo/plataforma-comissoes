@@ -201,7 +201,10 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
   }
 
   function handleExcluir() {
-    if (!confirm('Excluir esta importação? Esta ação não pode ser desfeita.')) return
+    const msg = isConfirmada
+      ? 'Excluir esta importação confirmada? As linhas de apuração em rascunho vinculadas perderão o vínculo. Esta ação não pode ser desfeita.'
+      : 'Excluir esta importação? Esta ação não pode ser desfeita.'
+    if (!confirm(msg)) return
     startTransition(async () => {
       const result = await excluirImportacao(importacao.id)
       if (result.error) { setErro(result.error); return }
@@ -383,7 +386,7 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
       </div>
 
       {/* Ações */}
-      {canEdit && isPendente && (
+      {canEdit && (
         <div className="flex items-center justify-between pt-2">
           <button
             onClick={handleExcluir}
@@ -392,15 +395,17 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
           >
             Excluir importação
           </button>
-          <button
-            onClick={handleConfirmar}
-            disabled={pending || totalPendentes > 0}
-            className="px-6 py-2.5 text-sm bg-[#5B7291] text-white rounded-lg hover:bg-[#4a6080] transition-colors disabled:opacity-50"
-          >
-            {totalPendentes > 0
-              ? `Confirmar (${totalPendentes} pendente${totalPendentes !== 1 ? 's' : ''})`
-              : 'Confirmar importação'}
-          </button>
+          {isPendente && (
+            <button
+              onClick={handleConfirmar}
+              disabled={pending || totalPendentes > 0}
+              className="px-6 py-2.5 text-sm bg-[#5B7291] text-white rounded-lg hover:bg-[#4a6080] transition-colors disabled:opacity-50"
+            >
+              {totalPendentes > 0
+                ? `Confirmar (${totalPendentes} pendente${totalPendentes !== 1 ? 's' : ''})`
+                : 'Confirmar importação'}
+            </button>
+          )}
         </div>
       )}
     </>

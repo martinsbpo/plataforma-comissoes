@@ -47,8 +47,23 @@ export async function excluirImportacao(importacaoId: string): Promise<{ error?:
     .eq('id', importacaoId)
     .single()
 
-  if (imp?.status === 'confirmada') {
-    return { error: 'Importação confirmada não pode ser excluída. Use estorno.' }
+  // Verifica se existe apuração CONFIRMADA vinculada a linhas desta importação
+  const { data: apuracaoConfirmada } = await db
+    .from('apuracao_linhas')
+    .select('apuracao_id, apuracoes!inner(status)')
+    .eq('apuracoes.status', 'confirmada')
+    .in(
+      'importacao_linha_id',
+      (await db
+        .from('importacao_linhas')
+        .select('id')
+        .eq('importacao_id', importacaoId)
+      ).data?.map((l: { id: string }) => l.id) ?? []
+    )
+    .limit(1)
+
+  if (apuracaoConfirmada && apuracaoConfirmada.length > 0) {
+    return { error: 'Esta importação possui uma apuração confirmada vinculada. Desfaça a apuração antes de excluir.' }
   }
 
   if (imp?.storage_path) {
