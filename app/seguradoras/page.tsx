@@ -51,6 +51,7 @@ export default async function SeguradorasImportacaoPage({
   }
 
   const corretoraId = isBpo ? (params.corretora ?? session.tenantId) : session.tenantId
+  const corretoraSelecionada = corretoras.find(c => c.id === corretoraId)
 
   const [{ data: seguradoras }, { data: layouts }, historico] = await Promise.all([
     db.from('seguradoras').select('id, nome_fantasia, nome').eq('status', 'ativo').order('nome_fantasia'),
@@ -100,24 +101,34 @@ export default async function SeguradorasImportacaoPage({
 
         {/* Seletor de corretora (BPO) */}
         {isBpo && corretoras.length > 0 && (
-          <form method="GET" className="flex items-end gap-3">
-            <input type="hidden" name="aba" value={aba} />
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-600">Corretora</label>
-              <select
-                name="corretora"
-                defaultValue={corretoraId}
-                className="px-3 py-2 text-sm border-2 border-[#5B7291] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B7291]/30 min-w-[220px]"
-              >
-                {corretoras.map(c => (
-                  <option key={c.id} value={c.id}>{c.nome_fantasia ?? c.nome}</option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" className="px-4 py-2 text-sm bg-[#5B7291] text-white rounded-lg hover:bg-[#4a6080] transition-colors">
-              Selecionar
-            </button>
-          </form>
+          <div className="flex flex-col gap-3">
+            <form method="GET" className="flex items-end gap-3">
+              <input type="hidden" name="aba" value={aba} />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-gray-600">Corretora</label>
+                <select
+                  name="corretora"
+                  defaultValue={corretoraId}
+                  className="px-3 py-2 text-sm border-2 border-[#5B7291] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B7291]/30 min-w-[220px]"
+                >
+                  {corretoras.map(c => (
+                    <option key={c.id} value={c.id}>{c.nome_fantasia ?? c.nome}</option>
+                  ))}
+                </select>
+              </div>
+              <button type="submit" className="px-4 py-2 text-sm bg-[#5B7291] text-white rounded-lg hover:bg-[#4a6080] transition-colors">
+                Selecionar
+              </button>
+            </form>
+            {corretoraSelecionada && (
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-[#5B7291]/10 border border-[#5B7291]/30 rounded-lg w-fit">
+                <span className="text-xs text-[#5B7291]">Corretora ativa:</span>
+                <span className="text-sm font-bold text-[#5B7291]">
+                  {corretoraSelecionada.nome_fantasia ?? corretoraSelecionada.nome}
+                </span>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Abas */}
