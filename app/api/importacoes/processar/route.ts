@@ -225,7 +225,10 @@ export async function POST(req: NextRequest) {
         else totalPendentes++
       }
     } else {
-      const valor = linha.valor_bruto ?? 0
+      const valorBruto = linha.valor_bruto ?? 0
+      const isEstornoNegativo = valorBruto < 0
+      const tipo: TipoValor = isEstornoNegativo ? 'estorno' : 'comissao'
+      const valor = Math.abs(valorBruto)
       linhasDb.push({
         importacao_id: importacao.id,
         referencia: linha.referencia,
@@ -234,18 +237,19 @@ export async function POST(req: NextRequest) {
         data_competencia: linha.data_competencia ?? competencia,
         grupo_produto_id: grupoProdutoId,
         produto_id: produtoId,
-        tipo_valor: 'comissao' as TipoValor,
+        tipo_valor: tipo,
         valor,
         valor_base: linha.valor_base ?? null,
         parcela_comissionada: linha.parcela_comissionada ?? null,
         total_parcelas: linha.total_parcelas ?? null,
         pct_comissao: linha.pct_comissao ?? null,
-        status_linha: statusLinha,
+        status_linha: isEstornoNegativo ? 'ok' : statusLinha,
         texto_produto_raw: linha.produto_raw ?? null,
         estorno_manual: false,
       })
-      valorTotal += valor
-      if (statusLinha === 'ok') totalOk++
+      if (isEstornoNegativo) valorTotal -= valor
+      else valorTotal += valor
+      if (statusLinha === 'ok' || isEstornoNegativo) totalOk++
       else totalPendentes++
     }
   }
