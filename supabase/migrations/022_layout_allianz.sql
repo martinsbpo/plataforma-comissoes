@@ -46,14 +46,12 @@ BEGIN
   INSERT INTO public.seguradora_layouts (
     seguradora_id, nome, formato,
     linha_cabecalho, primeira_linha_dados,
-    grupo_produto_fixo_id,
     extensoes_esperadas, status
   ) VALUES (
     v_seg_id,
     'Comissões — Excel Mensal',
     'xlsx',
     10, 11,
-    v_grp_id,
     ARRAY['.xlsx', '.xls'],
     'ativo'
   )
