@@ -103,6 +103,27 @@ function getColuna(row: string[], headers: string[], coluna_arquivo: string): st
   return ''
 }
 
+// Suporta parcela como número isolado ou fração "3/10"
+function parseParcela(
+  parcelaRaw: string,
+  totalRaw: string,
+  fracaoRaw: string
+): { parcela_comissionada?: number; total_parcelas?: number } {
+  if (fracaoRaw && fracaoRaw.trim()) {
+    const parts = fracaoRaw.trim().split('/')
+    if (parts.length === 2) {
+      const p = parseNumber(parts[0])
+      const t = parseNumber(parts[1])
+      return { parcela_comissionada: p, total_parcelas: t }
+    }
+    return { parcela_comissionada: parseNumber(fracaoRaw) }
+  }
+  return {
+    parcela_comissionada: parseNumber(parcelaRaw),
+    total_parcelas: parseNumber(totalRaw),
+  }
+}
+
 function mapRow(
   row: string[],
   headers: string[],
@@ -134,8 +155,7 @@ function mapRow(
     grupo_produto_raw: get('grupo_produto') || undefined,
     produto_raw: get('produto') || undefined,
     valor_base: parseNumber(get('valor_base')),
-    parcela_comissionada: parseNumber(get('parcela_comissionada')),
-    total_parcelas: parseNumber(get('total_parcelas')),
+    ...parseParcela(get('parcela_comissionada'), get('total_parcelas'), get('parcela_fracao')),
     valor_angariacao: parseNumber(get('valor_angariacao')),
     pct_angariacao: parseNumber(get('pct_angariacao')),
     valor_vitalicio: parseNumber(get('valor_vitalicio')),
