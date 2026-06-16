@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { confirmarImportacao, excluirImportacao, resolverLinhaPendente } from '../../actions'
+import { confirmarImportacao, excluirImportacao, excluirLinhaImportacao, resolverLinhaPendente } from '../../actions'
 
 type GrupoProduto = { id: string; nome: string }
 type Produto = { id: string; nome: string; grupo_produto_id: string }
@@ -192,6 +192,15 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
     })
   }
 
+  function handleExcluirLinha(linhaId: string) {
+    if (!confirm('Excluir este lançamento? Esta ação não pode ser desfeita.')) return
+    startTransition(async () => {
+      const result = await excluirLinhaImportacao(linhaId)
+      if (result.error) { setErro(result.error); return }
+      setLinhas((prev) => prev.filter((l) => l.id !== linhaId))
+    })
+  }
+
   function handleConfirmar() {
     startTransition(async () => {
       const result = await confirmarImportacao(importacao.id)
@@ -362,14 +371,23 @@ export function DetalheImportacao({ importacao, linhas: linhasInit, grupos, prod
                 </td>
                 {canEdit && isPendente && (
                   <td className="px-4 py-3 text-right">
-                    {l.status_linha !== 'ok' && (
+                    <div className="flex items-center justify-end gap-3">
+                      {l.status_linha !== 'ok' && (
+                        <button
+                          onClick={() => handleResolver(l)}
+                          className="text-xs text-[#5B7291] hover:underline"
+                        >
+                          Resolver
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleResolver(l)}
-                        className="text-xs text-[#5B7291] hover:underline"
+                        onClick={() => handleExcluirLinha(l.id)}
+                        disabled={pending}
+                        className="text-xs text-red-400 hover:text-red-600 hover:underline disabled:opacity-50"
                       >
-                        Resolver
+                        Excluir
                       </button>
-                    )}
+                    </div>
                   </td>
                 )}
               </tr>

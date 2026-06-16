@@ -77,6 +77,22 @@ export async function excluirImportacao(importacaoId: string): Promise<{ error?:
   return {}
 }
 
+export async function excluirLinhaImportacao(linhaId: string): Promise<{ error?: string }> {
+  const session = await getSession()
+  if (!session || !['bpo_admin', 'bpo_operador'].includes(session.role)) {
+    return { error: 'Sem permissão' }
+  }
+
+  const { error } = await adminDb()
+    .from('importacao_linhas')
+    .delete()
+    .eq('id', linhaId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/seguradoras')
+  return {}
+}
+
 export async function resolverLinhaPendente(
   linhaId: string,
   grupoProdutoId: string,
