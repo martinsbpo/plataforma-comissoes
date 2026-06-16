@@ -1,6 +1,23 @@
+-- Adiciona campos de parcela e parcela_fracao à constraint de layout_mapeamentos
+ALTER TABLE public.layout_mapeamentos
+  DROP CONSTRAINT IF EXISTS layout_mapeamentos_campo_sistema_check;
+
+ALTER TABLE public.layout_mapeamentos
+  ADD CONSTRAINT layout_mapeamentos_campo_sistema_check
+  CHECK (campo_sistema IN (
+    'referencia', 'nome_segurado', 'cpf_segurado',
+    'data_competencia', 'grupo_produto', 'produto',
+    'valor_base', 'pct_comissao',
+    'valor_angariacao', 'valor_vitalicio',
+    'valor_bruto', 'valor_estorno',
+    'parcela_comissionada', 'total_parcelas', 'parcela_fracao',
+    'valor_incentivo', 'pct_incentivo',
+    'valor_bonificacao', 'pct_bonificacao',
+    'pct_angariacao', 'pct_vitalicio', 'pct_estorno'
+  ));
+
 -- Layout Allianz — Excel (.xlsx)
 -- Cabeçalho na linha 10, dados a partir da linha 11
--- Grupo fixo: Ramos Elementares
 -- De-para de RAMO para produtos
 
 DO $$
